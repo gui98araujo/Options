@@ -57,19 +57,29 @@ def simular_calls(dias_simulados, data, valor_minimo_padrao, limite_inferior, li
 # Configuração do título do aplicativo Streamlit e remoção da barra lateral
 st.set_page_config(page_title="Simulação de Preços de Calls", page_icon="📈", layout="wide")
 
+# Título do sidebar
+st.sidebar.title('Simulação de Preços de Calls')
+
+# Input dos valores desejados
+tempo_desejado = st.sidebar.slider("Para quantos dias você quer avaliar o preço?", min_value=1, max_value=360, value=30)
+
 # Carregar os dados
 data, valor_minimo_padrao, limite_inferior, limite_superior = carregar_dados("Açúcar")
 
-# Simulação das calls
-tempo_desejado = 30  # Defina um valor padrão para o tempo desejado
-resultados = simular_calls(tempo_desejado, data, valor_minimo_padrao, limite_inferior, limite_superior)
+# Exibir a imagem
+st.markdown('<img src="https://ibea.com.br/wp-content/uploads/2020/10/Capturar1.png" alt="logo" style="width:200px;">', unsafe_allow_html=True)
 
-# Exibição da imagem acima do título da saída
-st.markdown('<img src="https://ibea.com.br/wp-content/uploads/2020/10/Capturar1.png" alt="logo" style="width:200px;margin-bottom:20px;">', unsafe_allow_html=True)
+# Adicionar espaço antes do título
+st.write("")
 
-# Título principal
-st.title("Preços das Calls para 30 dias:")
+# Título
+st.write("Preços das Calls para", tempo_desejado, "dias:")
 
-# Exibição dos resultados em forma de tabela
-df_resultados = pd.DataFrame(resultados, columns=["Strike", "Preço"])
-st.write(df_resultados)
+# Botão para simular
+if st.sidebar.button("Simular"):
+    # Simulação das calls
+    resultados = simular_calls(tempo_desejado, data, valor_minimo_padrao, limite_inferior, limite_superior)
+
+    # Exibição dos resultados em forma de tabela
+    df_resultados = pd.DataFrame(resultados, columns=["Strike", "Preço"])
+    st.write(df_resultados)
