@@ -85,5 +85,5 @@ if st.sidebar.button("Simular"):
 
     # Exibição dos resultados em forma de tabela
     st.write("Preços das Calls para", tempo_desejado, "dias:")
-    df_resultados = pd.DataFrame(resultados, columns=["Preço da Call", "Valor Justo"])
+    df_resultados = pd.DataFrame(resultados, columns=["Strike", "Preço"])
     st.write(df_resultados)
