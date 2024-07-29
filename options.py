@@ -40,19 +40,12 @@ def calcular_dias_uteis(data_inicio, data_fim):
     dias_uteis = np.busday_count(data_inicio.date(), data_fim.date())
     return dias_uteis
 
-def VaR():
+def risco():
     st.title("Análise de Risco")
 
-    escolha = st.selectbox('Selecione o ativo:', ['USDBRL=X', 'SB=F', 'Etanol'])
+    escolha = st.selectbox('Selecione o ativo:', ['USDBRL=X', 'SB=F'])
 
-    if escolha.lower() == 'etanol':
-        df = pd.read_excel('etanol.xls')
-        data = df
-        data['Data'] = pd.to_datetime(data['Data'])
-        data.set_index('Data', inplace=True)
-        data['Adj Close'] = data['À vista R$'].str.replace(',', '.').astype(float)
-    else:
-        data = yf.download(escolha, start='2013-01-01', end='2025-01-01')
+    data = yf.download(escolha, start='2013-01-01', end='2025-01-01')
 
     current_price = data['Adj Close'][-1]
 
@@ -60,24 +53,26 @@ def VaR():
     n_days = calcular_dias_uteis(data.index[-1], data_fim)
 
     if st.button('Calcular'):
+        data = data[data.index >= '2018-01-01']
         VaR_EWMA, VaR_EWMA_2, price_at_risk, price_at_risk_2, mean_returns, std_returns = calcular_var(data, n_days, current_price)
 
-        col1, col2, col3 = st.columns(3)
-        col1.metric("VaR (97.5% confiança)", f"{VaR_EWMA:.2f}", "")
-        col2.metric("Preço em risco (Z1)", f"{price_at_risk:.2f}", "")
-        col3.metric("Preço em risco (Z2)", f"{price_at_risk_2:.2f}", "")
-        st.metric("Média dos Retornos Diários", f"{mean_returns:.4f}", "")
-        st.metric("Desvio Padrão dos Retornos Diários", f"{std_returns:.4f}", "")
+        # Exibir KPIs
+        col1, col2, col3, col4, col5 = st.columns(5)
+        col1.metric("VaR (97.5% confiança)", f"{VaR_EWMA:.2f}")
+        col2.metric("Preço em risco (Z1)", f"{price_at_risk:.2f}")
+        col3.metric("Preço em risco (Z2)", f"{price_at_risk_2:.2f}")
+        col4.metric("Média dos Retornos Diários", f"{mean_returns:.4f}")
+        col5.metric("Desvio Padrão dos Retornos Diários", f"{std_returns:.4f}")
 
+        # Gráfico de distribuição
         hist_data = data['Returns'].dropna()
-        fig = px.histogram(hist_data, x='Returns', nbins=50)
+        fig = px.histogram(hist_data, x='Returns', nbins=30)
         mean = hist_data.mean()
         std_dev = hist_data.std()
-        x = np.linspace(hist_data.min(), hist_data.max(), 50)
+        x = np.linspace(hist_data.min(), hist_data.max(), 100)
         y = 1/(std_dev * np.sqrt(2 * np.pi)) * np.exp(-(x - mean)**2 / (2 * std_dev**2))
-        fig.add_trace(go.Scatter(x=x, y=y, mode='lines', name='Normal Distribution'))
+        fig.add_trace(go.Scatter(x=x, y=y, mode='lines', name='Normal Distribution', line=dict(color='red')))
         st.plotly_chart(fig)
-
 
 import streamlit as st
 import numpy as np
