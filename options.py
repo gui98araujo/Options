@@ -42,6 +42,7 @@ def VaR():
 
     data = yf.download(escolha, start='2013-01-01', end='2025-01-01')
 
+    
     current_price = data['Adj Close'][-1]
 
     data_fim = st.date_input('Selecione a data final:', datetime.now())
