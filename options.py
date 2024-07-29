@@ -1172,7 +1172,7 @@ def main():
     st.set_page_config(page_title="Gestão de Risco na Usina de Açúcar", page_icon="📈", layout="wide")
 
     st.sidebar.title("Menu")
-    page = st.sidebar.radio("Selecione uma opção", ["Introdução", "Metas", "Simulação de Opções", "Monte Carlo","Mercado","Risco","Breakeven", "Black Scholes","Cenários", "VaR"])
+    page = st.sidebar.radio("Selecione uma opção", ["Introdução", "Metas", "Simulação de Opções", "Monte Carlo", "Mercado", "Risco", "Breakeven", "Black Scholes", "Cenários", "VaR"])
 
     if page == "Introdução":
         st.title("Gestão de Risco e Derivativos")
