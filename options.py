@@ -1046,7 +1046,7 @@ def display_kpis(VaR_EWMA, VaR_EWMA_2, price_at_risk, price_at_risk_2, mean_retu
     st.markdown(f"<h3 style='color: {kpi2_color};'>Desvio Padrão dos Retornos Diários: {std_returns:.4f}</h3>", unsafe_allow_html=True)
 
 # Função para criar o gráfico de distribuição normal
-def plot_distribution(mean_returns, std_returns, current_price, VaR_EWMA, VaR_EWMA_2):
+def plot_distribution(mean_returns, std_returns, current_price, VaR_EWMA, VaR_EWMA_2, price_at_risk, price_at_risk_2):
     simulated_prices = np.random.normal(mean_returns, std_returns, 10000) * current_price + current_price
     hist_data = np.histogram(simulated_prices, bins=100)
 
