@@ -12,7 +12,6 @@ import math
 import scipy.stats as stats
 from scipy.stats import norm
 
-st.set_option('deprecation.showPyplotGlobalUse', False)
 
 
 
