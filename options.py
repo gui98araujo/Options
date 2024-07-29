@@ -71,7 +71,7 @@ def VaR():
         pdf = 1/(std_returns * np.sqrt(2 * np.pi)) * np.exp(-(bin_centers - mean_returns)**2 / (2 * std_returns**2))
 
         fig = go.Figure()
-        fig.add_trace(go.Histogram(x=hist_data, nbinsx=20, name='Histograma', histnorm='probability density'))
+        fig.add_trace(go.Histogram(x=hist_data, nbinsx=50, name='Histograma', histnorm='probability density'))
         fig.add_trace(go.Scatter(x=bin_centers, y=pdf, mode='lines', name='Distribuição Normal', line=dict(color='red')))
 
         st.plotly_chart(fig)
