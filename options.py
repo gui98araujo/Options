@@ -53,7 +53,7 @@ def VaR():
     n_days = calcular_dias_uteis(data.index[-1], data_fim)
 
     if st.button('Calcular'):
-        data = data[data.index >= '2018-01-01']
+        data = data[data.index >= '2013-01-01']
         VaR_EWMA, VaR_EWMA_2, price_at_risk, price_at_risk_2, mean_returns, std_returns = calcular_var(data, n_days, current_price)
 
         # Exibir KPIs
@@ -66,7 +66,7 @@ def VaR():
 
         # Gráfico de distribuição
         hist_data = data['Returns'].dropna()
-        hist, bins = np.histogram(hist_data, bins=20, density=True)
+        hist, bins = np.histogram(hist_data, bins=50, density=True)
         bin_centers = 0.5 * (bins[1:] + bins[:-1])
         pdf = 1/(std_returns * np.sqrt(2 * np.pi)) * np.exp(-(bin_centers - mean_returns)**2 / (2 * std_returns**2))
 
