@@ -70,10 +70,10 @@ def VaR():
         st.metric("Desvio Padrão dos Retornos Diários", f"{std_returns:.4f}", "")
 
         hist_data = data['Returns'].dropna()
-        fig = px.histogram(hist_data, x='Returns', nbins=100)
+        fig = px.histogram(hist_data, x='Returns', nbins=50)
         mean = hist_data.mean()
         std_dev = hist_data.std()
-        x = np.linspace(hist_data.min(), hist_data.max(), 100)
+        x = np.linspace(hist_data.min(), hist_data.max(), 50)
         y = 1/(std_dev * np.sqrt(2 * np.pi)) * np.exp(-(x - mean)**2 / (2 * std_dev**2))
         fig.add_trace(go.Scatter(x=x, y=y, mode='lines', name='Normal Distribution'))
         st.plotly_chart(fig)
