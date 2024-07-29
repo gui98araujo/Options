@@ -994,94 +994,6 @@ def cenarios():
 
 
    
-import streamlit as st
-import yfinance as yf
-import numpy as np
-import pandas as pd
-import plotly.graph_objs as go
-from scipy.stats import norm
-
-# Função para calcular VaR e outras estatísticas
-def calcular_var(data, n_days, current_price):
-    # Calcular retornos diários
-    data['Returns'] = data['Adj Close'].pct_change()
-
-    # Definir o parâmetro lambda para EWMA (comumente usado valor é 0.94)
-    lambda_ = 0.94
-
-    # Calcular a volatilidade EWMA
-    data['EWMA_Vol'] = data['Returns'].ewm(span=(2/(1-lambda_)-1)).std()
-
-    # Extrapolar a volatilidade para n pregões
-    data['Annualized_EWMA_Vol'] = data['EWMA_Vol'] * np.sqrt(n_days)
-
-    # Valor de Z para 97,5% de confiança
-    Z1 = -1.96
-    Z2 = 1.96
-
-    # Calcular o VaR usando a volatilidade EWMA mais recente
-    VaR_EWMA = Z1 * data['Annualized_EWMA_Vol'].iloc[-1] * current_price
-    VaR_EWMA_2 = Z2 * data['Annualized_EWMA_Vol'].iloc[-1] * current_price
-
-    # Calcular o preço em risco
-    price_at_risk = current_price + VaR_EWMA
-    price_at_risk_2 = current_price + VaR_EWMA_2
-
-    # Calcular média e desvio padrão dos retornos
-    mean_returns = data['Returns'].mean()
-    std_returns = data['Returns'].std()
-
-    return VaR_EWMA, VaR_EWMA_2, price_at_risk, price_at_risk_2, mean_returns, std_returns
-
-# Função para exibir os KPIs
-def display_kpis(VaR_EWMA, VaR_EWMA_2, price_at_risk, price_at_risk_2, mean_returns, std_returns):
-    kpi1_color = "green" if VaR_EWMA < 0 else "red"
-    kpi2_color = "green" if mean_returns > 0 else "red"
-    
-    st.markdown(f"<h3 style='color: {kpi1_color};'>VaR (97.5% Confiança): {VaR_EWMA:.2f}</h3>", unsafe_allow_html=True)
-    st.markdown(f"<h3 style='color: {kpi1_color};'>VaR (97.5% Confiança): {VaR_EWMA_2:.2f}</h3>", unsafe_allow_html=True)
-    st.markdown(f"<h3 style='color: {kpi1_color};'>Preço em Risco: {price_at_risk:.2f}</h3>", unsafe_allow_html=True)
-    st.markdown(f"<h3 style='color: {kpi1_color};'>Preço em Risco: {price_at_risk_2:.2f}</h3>", unsafe_allow_html=True)
-    st.markdown(f"<h3 style='color: {kpi2_color};'>Média dos Retornos Diários: {mean_returns:.4f}</h3>", unsafe_allow_html=True)
-    st.markdown(f"<h3 style='color: {kpi2_color};'>Desvio Padrão dos Retornos Diários: {std_returns:.4f}</h3>", unsafe_allow_html=True)
-
-# Função para criar o gráfico de distribuição normal
-def plot_distribution(mean_returns, std_returns, current_price, VaR_EWMA, VaR_EWMA_2, price_at_risk, price_at_risk_2):
-    simulated_prices = np.random.normal(mean_returns, std_returns, 10000) * current_price + current_price
-    hist_data = np.histogram(simulated_prices, bins=100)
-
-    fig = go.Figure()
-    fig.add_trace(go.Bar(
-        x=hist_data[1],
-        y=hist_data[0],
-        marker=dict(color='blue'),
-        opacity=0.5,
-        name='Simulated Prices'
-    ))
-
-    x = np.linspace(min(simulated_prices), max(simulated_prices), 1000)
-    y = norm.pdf(x, current_price + mean_returns, std_returns) * len(simulated_prices) * (hist_data[1][1] - hist_data[1][0])
-    fig.add_trace(go.Scatter(
-        x=x,
-        y=y,
-        mode='lines',
-        line=dict(color='orange'),
-        name='Normal Distribution'
-    ))
-
-    fig.add_shape(type='line', x0=price_at_risk, x1=price_at_risk, y0=0, y1=max(hist_data[0]),
-                  line=dict(color='red', width=2, dash='dash'), name='VaR 97.5%')
-    fig.add_shape(type='line', x0=price_at_risk_2, x1=price_at_risk_2, y0=0, y1=max(hist_data[0]),
-                  line=dict(color='green', width=2, dash='dash'), name='VaR 97.5%')
-
-    fig.update_layout(
-        title='Distribuição Normal dos Preços Simulados',
-        xaxis_title='Preço',
-        yaxis_title='Frequência',
-        showlegend=True
-    )
-
-    st.plotly_chart(fig)
 
 
 
@@ -1121,7 +1033,7 @@ def main():
     st.set_page_config(page_title="Gestão de Risco na Usina de Açúcar", page_icon="📈", layout="wide")
 
     st.sidebar.title("Menu")
-    page = st.sidebar.radio("Selecione uma opção", ["Introdução", "Metas", "Simulação de Opções", "Monte Carlo", "Mercado", "Risco", "Breakeven", "Black Scholes", "Cenários", "VaR"])
+    page = st.sidebar.radio("Selecione uma opção", ["Introdução", "Metas", "Simulação de Opções", "Monte Carlo", "Mercado", "Risco", "Breakeven", "Black Scholes", "Cenários"])
 
     if page == "Introdução":
         st.title("Gestão de Risco e Derivativos")
@@ -1206,20 +1118,6 @@ def main():
 
             valor_justo = calcular_valor_justo(pernas, S, expiry, r, sigma)
             st.write(f"Valor justo da operação combinada: {valor_justo:.2f}")
-
-    elif page == "VaR":
-        st.title("Análise de VaR (Value at Risk)")
-        ticker_selection = st.radio("Selecione o ticker para análise de VaR:", ['USDBRL=X', 'SB=F'])
-        if ticker_selection == 'USDBRL=X':
-            ticker = 'USDBRL=X'
-        elif ticker_selection == 'SB=F':
-            ticker = 'SB=F'
-
-        data = yf.download(ticker, start='2023-01-01', end='2024-01-01')
-        spot_price = data['Adj Close'].iloc[-1]
-        VaR_EWMA, VaR_EWMA_2, price_at_risk, price_at_risk_2, mean_returns, std_returns = calcular_var(data, n_days=252, current_price=spot_price)
-        display_kpis(VaR_EWMA, VaR_EWMA_2, price_at_risk, price_at_risk_2, mean_returns, std_returns)
-        plot_distribution(mean_returns, std_returns, spot_price, VaR_EWMA, VaR_EWMA_2)
 
 if __name__ == "__main__":
     main()
