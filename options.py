@@ -12,7 +12,71 @@ import math
 import scipy.stats as stats
 from scipy.stats import norm
 
+import streamlit as st
+import yfinance as yf
+import numpy as np
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objs as go
+from datetime import datetime, timedelta
 
+# Função para calcular VaR e outras estatísticas
+def calcular_var(data, n_days, current_price):
+    data['Returns'] = data['Adj Close'].pct_change()
+    lambda_ = 0.94
+    data['EWMA_Vol'] = data['Returns'].ewm(span=(2/(1-lambda_)-1)).std()
+    data['Annualized_EWMA_Vol'] = data['EWMA_Vol'] * np.sqrt(n_days)
+    Z1 = -1.96
+    Z2 = 1.96
+    VaR_EWMA = Z1 * data['Annualized_EWMA_Vol'].iloc[-1] * current_price
+    VaR_EWMA_2 = Z2 * data['Annualized_EWMA_Vol'].iloc[-1] * current_price
+    price_at_risk = current_price + VaR_EWMA
+    price_at_risk_2 = current_price + VaR_EWMA_2
+    mean_returns = data['Returns'].mean()
+    std_returns = data['Returns'].std()
+    return VaR_EWMA, VaR_EWMA_2, price_at_risk, price_at_risk_2, mean_returns, std_returns
+
+def calcular_dias_uteis(data_inicio, data_fim):
+    dias_uteis = np.busday_count(data_inicio.date(), data_fim.date())
+    return dias_uteis
+
+def VaR():
+    st.title("Análise de Risco")
+
+    escolha = st.selectbox('Selecione o ativo:', ['USDBRL=X', 'SB=F', 'Etanol'])
+
+    if escolha.lower() == 'etanol':
+        df = pd.read_excel('etanol.xls')
+        data = df
+        data['Data'] = pd.to_datetime(data['Data'])
+        data.set_index('Data', inplace=True)
+        data['Adj Close'] = data['À vista R$'].str.replace(',', '.').astype(float)
+    else:
+        data = yf.download(escolha, start='2013-01-01', end='2025-01-01')
+
+    current_price = data['Adj Close'][-1]
+
+    data_fim = st.date_input('Selecione a data final:', datetime.now())
+    n_days = calcular_dias_uteis(data.index[-1], data_fim)
+
+    if st.button('Calcular'):
+        VaR_EWMA, VaR_EWMA_2, price_at_risk, price_at_risk_2, mean_returns, std_returns = calcular_var(data, n_days, current_price)
+
+        col1, col2, col3 = st.columns(3)
+        col1.metric("VaR (97.5% confiança)", f"{VaR_EWMA:.2f}", "")
+        col2.metric("Preço em risco (Z1)", f"{price_at_risk:.2f}", "")
+        col3.metric("Preço em risco (Z2)", f"{price_at_risk_2:.2f}", "")
+        st.metric("Média dos Retornos Diários", f"{mean_returns:.4f}", "")
+        st.metric("Desvio Padrão dos Retornos Diários", f"{std_returns:.4f}", "")
+
+        hist_data = data['Returns'].dropna()
+        fig = px.histogram(hist_data, x='Returns', nbins=100)
+        mean = hist_data.mean()
+        std_dev = hist_data.std()
+        x = np.linspace(hist_data.min(), hist_data.max(), 100)
+        y = 1/(std_dev * np.sqrt(2 * np.pi)) * np.exp(-(x - mean)**2 / (2 * std_dev**2))
+        fig.add_trace(go.Scatter(x=x, y=y, mode='lines', name='Normal Distribution'))
+        st.plotly_chart(fig)
 
 
 import streamlit as st
@@ -1033,7 +1097,7 @@ def main():
     st.set_page_config(page_title="Gestão de Risco na Usina de Açúcar", page_icon="📈", layout="wide")
 
     st.sidebar.title("Menu")
-    page = st.sidebar.radio("Selecione uma opção", ["Introdução", "Metas", "Simulação de Opções", "Monte Carlo", "Mercado", "Risco", "Breakeven", "Black Scholes", "Cenários"])
+    page = st.sidebar.radio("Selecione uma opção", ["Introdução", "Metas", "Simulação de Opções", "Monte Carlo", "Mercado", "Risco", "Breakeven", "Black Scholes", "Cenários", "VaR"])
 
     if page == "Introdução":
         st.title("Gestão de Risco e Derivativos")
@@ -1073,6 +1137,8 @@ def main():
         breakeven()
     elif page == "Cenários":
         cenarios()
+    elif page == "VaR":
+        VaR()
     elif page == "Black Scholes":
         st.title("Cálculo de Opções usando o Modelo de Black-Scholes")
         ticker_selection = st.radio("Selecione o ticker:", ['SBH25.NYB', 'SBV24.NYB'])
