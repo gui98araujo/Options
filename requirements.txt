@@ -6,4 +6,4 @@ streamlit
 matplotlib
 seaborn
 yfinance
-scipy.stats
+scipy
