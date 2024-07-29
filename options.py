@@ -66,12 +66,12 @@ def VaR():
 
         # Gráfico de distribuição
         hist_data = data['Returns'].dropna()
-        hist, bins = np.histogram(hist_data, bins=50, density=True)
+        hist, bins = np.histogram(hist_data, bins=100, density=True)
         bin_centers = 0.5 * (bins[1:] + bins[:-1])
         pdf = 1/(std_returns * np.sqrt(2 * np.pi)) * np.exp(-(bin_centers - mean_returns)**2 / (2 * std_returns**2))
 
         fig = go.Figure()
-        fig.add_trace(go.Histogram(x=hist_data, nbinsx=50, name='Histograma', histnorm='probability density'))
+        fig.add_trace(go.Histogram(x=hist_data, nbinsx=100, name='Histograma', histnorm='probability density'))
         fig.add_trace(go.Scatter(x=bin_centers, y=pdf, mode='lines', name='Distribuição Normal', line=dict(color='red')))
 
         st.plotly_chart(fig)
