@@ -20,21 +20,16 @@ import plotly.express as px
 import plotly.graph_objs as go
 from datetime import datetime, timedelta
 
-# Função para calcular VaR e outras estatísticas
-def calcular_var(data, n_days, current_price):
+def calcular_var(data, n_days, current_price, z_score):
     data['Returns'] = data['Adj Close'].pct_change()
     lambda_ = 0.94
     data['EWMA_Vol'] = data['Returns'].ewm(span=(2/(1-lambda_)-1)).std()
     data['Annualized_EWMA_Vol'] = data['EWMA_Vol'] * np.sqrt(n_days)
-    Z1 = -1.96
-    Z2 = 1.96
-    VaR_EWMA = Z1 * data['Annualized_EWMA_Vol'].iloc[-1] * current_price
-    VaR_EWMA_2 = Z2 * data['Annualized_EWMA_Vol'].iloc[-1] * current_price
+    VaR_EWMA = z_score * data['Annualized_EWMA_Vol'].iloc[-1] * current_price
     price_at_risk = current_price + VaR_EWMA
-    price_at_risk_2 = current_price + VaR_EWMA_2
     mean_returns = data['Returns'].mean()
     std_returns = data['Returns'].std()
-    return VaR_EWMA, VaR_EWMA_2, price_at_risk, price_at_risk_2, mean_returns, std_returns
+    return VaR_EWMA, price_at_risk, mean_returns, std_returns
 
 def calcular_dias_uteis(data_inicio, data_fim):
     dias_uteis = np.busday_count(data_inicio.date(), data_fim.date())
@@ -52,17 +47,21 @@ def VaR():
     data_fim = st.date_input('Selecione a data final:', datetime.now())
     n_days = calcular_dias_uteis(data.index[-1], data_fim)
 
+    # Input para selecionar o nível de confiança
+    confianca = st.slider('Selecione o nível de confiança (%):', min_value=90, max_value=99, step=1)
+    z_score = norm.ppf((100 - confianca) / 100)  # Calcula o z-score correspondente ao nível de confiança
+
     if st.button('Calcular'):
         data = data[data.index >= '2013-01-01']
-        VaR_EWMA, VaR_EWMA_2, price_at_risk, price_at_risk_2, mean_returns, std_returns = calcular_var(data, n_days, current_price)
+        VaR_EWMA, price_at_risk, mean_returns, std_returns = calcular_var(data, n_days, current_price, z_score)
 
         # Exibir KPIs
         col1, col2, col3, col4, col5 = st.columns(5)
-        col1.metric("VaR (97.5% confiança)", f"{VaR_EWMA:.2f}")
-        col2.metric("Preço em risco (Z1)", f"{price_at_risk:.2f}")
-        col3.metric("Preço em risco (Z2)", f"{price_at_risk_2:.2f}")
-        col4.metric("Média dos Retornos Diários", f"{mean_returns:.2%}")
-        col5.metric("Volatilidade Histórica Diária", f"{std_returns:.2%}")
+        col1.metric("VaR", f"{VaR_EWMA:.2f}")
+        col2.metric("Preço em risco", f"{price_at_risk:.2f}")
+        col3.metric("Média dos Retornos Diários", f"{mean_returns:.2%}")
+        col4.metric("Volatilidade Histórica Diária", f"{std_returns:.2%}")
+        col5.metric("Z-Score Utilizado", f"{z_score:.2f}")
 
         # Gráfico de distribuição
         hist_data = data['Returns'].dropna()
@@ -75,7 +74,6 @@ def VaR():
         fig.add_trace(go.Scatter(x=bin_centers, y=pdf, mode='lines', name='Distribuição Normal', line=dict(color='red')))
 
         st.plotly_chart(fig)
-
 
 import streamlit as st
 import numpy as np
