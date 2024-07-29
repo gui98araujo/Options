@@ -40,7 +40,7 @@ def calcular_dias_uteis(data_inicio, data_fim):
     dias_uteis = np.busday_count(data_inicio.date(), data_fim.date())
     return dias_uteis
 
-def risco():
+def VaR():
     st.title("Análise de Risco")
 
     escolha = st.selectbox('Selecione o ativo:', ['USDBRL=X', 'SB=F'])
