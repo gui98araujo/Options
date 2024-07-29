@@ -40,7 +40,7 @@ def calcular_dias_uteis(data_inicio, data_fim):
     dias_uteis = np.busday_count(data_inicio.date(), data_fim.date())
     return dias_uteis
 
-def VaR():
+def risco():
     st.title("Análise de Risco")
 
     escolha = st.selectbox('Selecione o ativo:', ['USDBRL=X', 'SB=F'])
@@ -61,18 +61,21 @@ def VaR():
         col1.metric("VaR (97.5% confiança)", f"{VaR_EWMA:.2f}")
         col2.metric("Preço em risco (Z1)", f"{price_at_risk:.2f}")
         col3.metric("Preço em risco (Z2)", f"{price_at_risk_2:.2f}")
-        col4.metric("Média dos Retornos Diários", f"{mean_returns:.4f}")
-        col5.metric("Desvio Padrão dos Retornos Diários", f"{std_returns:.4f}")
+        col4.metric("Média dos Retornos Diários", f"{mean_returns:.2%}")
+        col5.metric("Desvio Padrão dos Retornos Diários", f"{std_returns:.2%}")
 
         # Gráfico de distribuição
         hist_data = data['Returns'].dropna()
-        fig = px.histogram(hist_data, x='Returns', nbins=30)
-        mean = hist_data.mean()
-        std_dev = hist_data.std()
-        x = np.linspace(hist_data.min(), hist_data.max(), 100)
-        y = 1/(std_dev * np.sqrt(2 * np.pi)) * np.exp(-(x - mean)**2 / (2 * std_dev**2))
-        fig.add_trace(go.Scatter(x=x, y=y, mode='lines', name='Normal Distribution', line=dict(color='red')))
+        hist, bins = np.histogram(hist_data, bins=20, density=True)
+        bin_centers = 0.5 * (bins[1:] + bins[:-1])
+        pdf = 1/(std_returns * np.sqrt(2 * np.pi)) * np.exp(-(bin_centers - mean_returns)**2 / (2 * std_returns**2))
+
+        fig = go.Figure()
+        fig.add_trace(go.Histogram(x=hist_data, nbinsx=20, name='Histograma', histnorm='probability density'))
+        fig.add_trace(go.Scatter(x=bin_centers, y=pdf, mode='lines', name='Distribuição Normal', line=dict(color='red')))
+
         st.plotly_chart(fig)
+
 
 import streamlit as st
 import numpy as np
