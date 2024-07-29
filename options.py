@@ -994,57 +994,7 @@ def cenarios():
 
 
 
-    # Coletar os dados do ticker usando yfinance
-    data = yf.download(ticker, start='2023-01-01', end='2024-01-01')
-
-    # Calcular o VaR e outras estatísticas
-    VaR_EWMA, VaR_EWMA_2, price_at_risk, price_at_risk_2, mean_returns, std_returns = calcular_var(data, n_days=252, current_price=spot_price)
-
-    # Exibir os KPIs
-    display_kpis(VaR_EWMA, VaR_EWMA_2, price_at_risk, price_at_risk_2, mean_returns, std_returns)
-
-    # Criar e exibir o gráfico de distribuição
-    plot_distribution(mean_returns, std_returns, spot_price, VaR_EWMA, VaR_EWMA_2)
-
-elif page == "VaR":
-    st.title("Análise de VaR (Value at Risk)")
-
-    # Seleção do ticker para análise
-    ticker_selection = st.radio("Selecione o ticker para análise de VaR:", ['USDBRL=X', 'SB=F'])
-    if ticker_selection == 'USDBRL=X':
-        ticker = 'USDBRL=X'
-    elif ticker_selection == 'SB=F':
-        ticker = 'SB=F'
-
-    # Coletar os dados do ticker usando yfinance
-    data = yf.download(ticker, start='2023-01-01', end='2024-01-01')
-    spot_price = data['Adj Close'].iloc[-1]
-
-    # Calcular o VaR e outras estatísticas
-    VaR_EWMA, VaR_EWMA_2, price_at_risk, price_at_risk_2, mean_returns, std_returns = calcular_var(data, n_days=252, current_price=spot_price)
-
-    # Exibir os KPIs
-    display_kpis(VaR_EWMA, VaR_EWMA_2, price_at_risk, price_at_risk_2, mean_returns, std_returns)
-
-    # Criar e exibir o gráfico de distribuição
-    plot_distribution(mean_returns, std_returns, spot_price, VaR_EWMA, VaR_EWMA_2)
-if name == "main":
-main()
-
-sql
-Copiar código
-
-This code includes the calculation of VaR using the EWMA method for both `USDBRL=X` and `SB=F`, displays KPIs with color coding, and generates a Plotly graph to show the distribution of simulated prices along with VaR lines. The KPIs and graph will dynamically update based on the selected ticker.
-
-
-
-
-coloque o código todo junto
-ChatGPT
-Claro, aqui está o código completo para o aplicativo Streamlit:
-
-python
-Copiar código
+   
 import streamlit as st
 import yfinance as yf
 import numpy as np
