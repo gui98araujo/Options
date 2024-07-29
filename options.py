@@ -62,7 +62,7 @@ def VaR():
         col2.metric("Preço em risco (Z1)", f"{price_at_risk:.2f}")
         col3.metric("Preço em risco (Z2)", f"{price_at_risk_2:.2f}")
         col4.metric("Média dos Retornos Diários", f"{mean_returns:.2%}")
-        col5.metric("Desvio Padrão dos Retornos Diários", f"{std_returns:.2%}")
+        col5.metric("Volatilidade Histórica Diária", f"{std_returns:.2%}")
 
         # Gráfico de distribuição
         hist_data = data['Returns'].dropna()
