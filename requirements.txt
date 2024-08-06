@@ -8,3 +8,4 @@ seaborn
 yfinance
 scipy
 plotly
+sklearn.linear_model
