@@ -69,6 +69,40 @@ def calcular_pureza_necessaria(ATR_desejado, estimativa_precipitacao, estimativa
     pureza_necessaria = (ATR_desejado - intercept - coef[0] * estimativa_impurezas - coef[2] * estimativa_precipitacao) / coef[1]
     return pureza_necessaria
 
+# Função para plotar gráficos de dispersão
+def plotar_graficos_dispersao(df):
+    fig = plt.figure(figsize=(18, 6))
+    
+    # Gráfico 1: Impureza Total vs ATR
+    ax1 = fig.add_subplot(131)
+    ax1.scatter(df['Impureza Total'], df['ATR'], color='blue')
+    ax1.set_title('Impureza Total vs ATR')
+    ax1.set_xlabel('Impureza Total')
+    ax1.set_ylabel('ATR')
+    
+    # Gráfico 2: Pureza vs ATR
+    ax2 = fig.add_subplot(132)
+    ax2.scatter(df['Pureza'], df['ATR'], color='red')
+    ax2.set_title('Pureza vs ATR')
+    ax2.set_xlabel('Pureza')
+    ax2.set_ylabel('ATR')
+    
+    # Gráfico 3: Preciptação vs ATR
+    ax3 = fig.add_subplot(133)
+    ax3.scatter(df['Preciptação'], df['ATR'], color='green')
+    ax3.set_title('Preciptação vs ATR')
+    ax3.set_xlabel('Preciptação')
+    ax3.set_ylabel('ATR')
+    
+    st.pyplot(fig)
+
+# Função para plotar heatmap de correlação
+def plotar_heatmap(df):
+    corr = df.corr()
+    fig, ax = plt.subplots()
+    sns.heatmap(corr, annot=True, cmap='coolwarm', ax=ax)
+    st.pyplot(fig)
+
 # Função principal do Streamlit
 def atr():
     st.title("Análise de ATR e Impurezas")
@@ -100,6 +134,20 @@ def atr():
         fig.add_trace(go.Scatter(x=df.index, y=resultados['Random Forest']['y_pred'], mode='lines', name='Predito Random Forest', line=dict(dash='dash')))
         fig.update_layout(title='Valores Reais vs Preditos do ATR', xaxis_title='Índice', yaxis_title='ATR')
         st.plotly_chart(fig)
+        
+        # Plotar gráficos de dispersão
+        st.subheader("Gráficos de Dispersão Comparativos")
+        plotar_graficos_dispersao(df)
+        
+        # Plotar heatmap de correlação
+        st.subheader("Heatmap de Correlação")
+        plotar_heatmap(df)
+        
+        # Explicabilidade das variáveis
+        st.subheader("Explicabilidade das Variáveis")
+        st.write("Explicabilidade de 'Impureza Total': baixa")
+        st.write("Explicabilidade de 'Pureza': alta")
+        st.write("Explicabilidade de 'Preciptação': moderada")
 
 
 
