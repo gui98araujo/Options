@@ -10,3 +10,4 @@ scipy
 plotly
 scikit-learn
 xgboost
+openpyxl
