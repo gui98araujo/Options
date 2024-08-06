@@ -34,7 +34,7 @@ from sklearn.metrics import r2_score, mean_squared_error
 # Função para carregar dados
 @st.cache_data
 def carregar_dados():
-    df = pd.read_excel('Historico Impurezas.xlsx')
+    df = pd.read_excel('/mnt/data/Historico Impurezas.xlsx')
     df = df.dropna()
     df['Impureza Total'] = df['Impureza Vegetal'] + df['Impureza Mineral']
     return df
@@ -103,12 +103,15 @@ def plotar_heatmap(df):
     sns.heatmap(corr, annot=True, cmap='coolwarm', ax=ax)
     st.pyplot(fig)
 
-# Função principal do Streamlit
+# Função principal do ATR
 def atr():
     st.title("Análise de ATR e Impurezas")
     
     # Carregar dados
     df = carregar_dados()
+    
+    # Filtrar apenas colunas numéricas para o cálculo da correlação
+    df_numerico = df.select_dtypes(include=[np.number])
     
     # Input do usuário
     ATR_desejado = st.number_input("ATR Desejado:", min_value=0.0, value=130.0)
@@ -141,7 +144,7 @@ def atr():
         
         # Plotar heatmap de correlação
         st.subheader("Heatmap de Correlação")
-        plotar_heatmap(df)
+        plotar_heatmap(df_numerico)
         
         # Explicabilidade das variáveis
         st.subheader("Explicabilidade das Variáveis")
