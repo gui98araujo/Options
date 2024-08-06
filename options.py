@@ -66,33 +66,30 @@ def calcular_pureza_necessaria(ATR_desejado, estimativa_precipitacao, estimativa
     return pureza_necessaria
 
 def plotar_graficos_dispersao(df):
-    fig = plt.figure(figsize=(18, 6))
+    fig = go.Figure()
     
-    ax1 = fig.add_subplot(131)
-    ax1.scatter(df['Impureza Total'], df['ATR'], color='blue')
-    ax1.set_title('Impureza Total vs ATR')
-    ax1.set_xlabel('Impureza Total')
-    ax1.set_ylabel('ATR')
+    fig.add_trace(go.Scatter(x=df['Impureza Total'], y=df['ATR'], mode='markers', name='Impureza Total vs ATR', marker=dict(color='blue')))
+    fig.add_trace(go.Scatter(x=df['Pureza'], y=df['ATR'], mode='markers', name='Pureza vs ATR', marker=dict(color='red')))
+    fig.add_trace(go.Scatter(x=df['Preciptação'], y=df['ATR'], mode='markers', name='Preciptação vs ATR', marker=dict(color='green')))
     
-    ax2 = fig.add_subplot(132)
-    ax2.scatter(df['Pureza'], df['ATR'], color='red')
-    ax2.set_title('Pureza vs ATR')
-    ax2.set_xlabel('Pureza')
-    ax2.set_ylabel('ATR')
+    fig.update_layout(
+        title='Gráficos de Dispersão Comparativos',
+        xaxis_title='Variáveis',
+        yaxis_title='ATR',
+        height=600,
+        width=800
+    )
     
-    ax3 = fig.add_subplot(133)
-    ax3.scatter(df['Preciptação'], df['ATR'], color='green')
-    ax3.set_title('Preciptação vs ATR')
-    ax3.set_xlabel('Preciptação')
-    ax3.set_ylabel('ATR')
-    
-    st.pyplot(fig)
+    st.plotly_chart(fig)
 
 def plotar_heatmap(df):
     cols = ['ATR', 'Impureza Total', 'Pureza', 'Preciptação']
     corr = df[cols].corr()
-    fig, ax = plt.subplots()
-    sns.heatmap(corr, annot=True, cmap='coolwarm', ax=ax)
+    
+    fig, ax = plt.subplots(figsize=(10, 8))
+    sns.heatmap(corr, annot=True, cmap='coolwarm', ax=ax, annot_kws={"size": 8}, cbar_kws={"shrink": 0.8})
+    ax.tick_params(axis='both', which='major', labelsize=10)
+    
     st.pyplot(fig)
 
 def atr():
@@ -131,7 +128,6 @@ def atr():
         st.write("Explicabilidade de 'Impureza Total': baixa")
         st.write("Explicabilidade de 'Pureza': alta")
         st.write("Explicabilidade de 'Preciptação': moderada")
-
 
 
 
