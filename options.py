@@ -34,7 +34,7 @@ from sklearn.metrics import r2_score, mean_squared_error
 # Função para carregar dados
 @st.cache_data
 def carregar_dados():
-    df = pd.read_excel('/mnt/data/Historico Impurezas.xlsx')
+    df = pd.read_excel('Historico Impurezas.xlsx')
     df = df.dropna()
     df['Impureza Total'] = df['Impureza Vegetal'] + df['Impureza Mineral']
     return df
