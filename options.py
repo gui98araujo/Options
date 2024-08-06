@@ -71,7 +71,6 @@ def calcular_pureza_necessaria(ATR_desejado, estimativa_precipitacao, estimativa
 
 # Função principal do Streamlit
 def atr():
-    st.set_page_config(page_title="Análise de ATR e Impurezas", page_icon="📊", layout="wide")
     st.title("Análise de ATR e Impurezas")
     
     # Carregar dados
