@@ -11,7 +11,7 @@ from matplotlib.ticker import FuncFormatter
 import math
 import scipy.stats as stats
 from scipy.stats import norm
-
+from plotly.subplots import make_subplots
 import streamlit as st
 import yfinance as yf
 import numpy as np
