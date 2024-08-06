@@ -8,3 +8,4 @@ seaborn
 yfinance
 scipy
 plotly
+scikit-learn
