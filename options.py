@@ -31,6 +31,7 @@ from sklearn.ensemble import RandomForestRegressor
 from xgboost import XGBRegressor
 from sklearn.metrics import r2_score, mean_squared_error
 
+
 @st.cache_data
 def load_dados():
     df = pd.read_excel('Historico Impurezas.xlsx')
@@ -66,18 +67,17 @@ def calcular_pureza_necessaria(ATR_desejado, estimativa_precipitacao, estimativa
     return pureza_necessaria
 
 def plotar_graficos_dispersao(df):
-    fig = go.Figure()
+    fig = make_subplots(rows=1, cols=3, subplot_titles=('Impureza Total vs ATR', 'Pureza vs ATR', 'Preciptação vs ATR'))
     
-    fig.add_trace(go.Scatter(x=df['Impureza Total'], y=df['ATR'], mode='markers', name='Impureza Total vs ATR', marker=dict(color='blue')))
-    fig.add_trace(go.Scatter(x=df['Pureza'], y=df['ATR'], mode='markers', name='Pureza vs ATR', marker=dict(color='red')))
-    fig.add_trace(go.Scatter(x=df['Preciptação'], y=df['ATR'], mode='markers', name='Preciptação vs ATR', marker=dict(color='green')))
+    fig.add_trace(go.Scatter(x=df['Impureza Total'], y=df['ATR'], mode='markers', marker=dict(color='blue'), name='Impureza Total vs ATR'), row=1, col=1)
+    fig.add_trace(go.Scatter(x=df['Pureza'], y=df['ATR'], mode='markers', marker=dict(color='red'), name='Pureza vs ATR'), row=1, col=2)
+    fig.add_trace(go.Scatter(x=df['Preciptação'], y=df['ATR'], mode='markers', marker=dict(color='green'), name='Preciptação vs ATR'), row=1, col=3)
     
     fig.update_layout(
-        title='Gráficos de Dispersão Comparativos',
-        xaxis_title='Variáveis',
-        yaxis_title='ATR',
+        title_text='Gráficos de Dispersão Comparativos',
         height=600,
-        width=800
+        width=1200,
+        showlegend=False
     )
     
     st.plotly_chart(fig)
@@ -125,9 +125,11 @@ def atr():
         plotar_heatmap(df)
         
         st.subheader("Explicabilidade das Variáveis")
-        st.write("Explicabilidade de 'Impureza Total': baixa")
-        st.write("Explicabilidade de 'Pureza': alta")
-        st.write("Explicabilidade de 'Preciptação': moderada")
+        st.markdown("""
+        <span style='color: red'>Explicabilidade de 'Impureza Total': baixa</span><br>
+        <span style='color: green'>Explicabilidade de 'Pureza': alta</span><br>
+        <span style='color: yellow'>Explicabilidade de 'Preciptação': moderada</span>
+        """, unsafe_allow_html=True)
 
 
 
