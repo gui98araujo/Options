@@ -20,6 +20,96 @@ import plotly.express as px
 import plotly.graph_objs as go
 from datetime import datetime, timedelta
 
+
+
+import streamlit as st
+import pandas as pd
+import numpy as np
+import plotly.graph_objects as go
+from sklearn.linear_model import LinearRegression, Ridge
+from sklearn.ensemble import RandomForestRegressor
+from xgboost import XGBRegressor
+from sklearn.metrics import r2_score, mean_squared_error
+
+# Função para carregar dados
+@st.cache_data
+def carregar_dados():
+    df = pd.read_excel('Historico Impurezas.xlsx')
+    df = df.dropna()
+    df['Impureza Total'] = df['Impureza Vegetal'] + df['Impureza Mineral']
+    return df
+
+# Função para treinar modelos e calcular métricas
+def treinar_modelos(df):
+    X = df[['Impureza Total', 'Pureza', 'Preciptação']]
+    y = df['ATR']
+    
+    # Modelos
+    models = {
+        "Regressão Linear": LinearRegression(),
+        "Random Forest": RandomForestRegressor(n_estimators=100, random_state=42),
+        "XGBoost": XGBRegressor(n_estimators=100, random_state=42),
+        "Ridge": Ridge(alpha=1.0)
+    }
+    
+    resultados = {}
+    for nome, model in models.items():
+        model.fit(X, y)
+        y_pred = model.predict(X)
+        r2 = r2_score(y, y_pred)
+        rmse = np.sqrt(mean_squared_error(y, y_pred))
+        resultados[nome] = {'model': model, 'R²': r2, 'RMSE': rmse, 'y_pred': y_pred}
+    
+    return resultados
+
+# Função para calcular pureza necessária
+def calcular_pureza_necessaria(ATR_desejado, estimativa_precipitacao, estimativa_impurezas, model):
+    coef = model.coef_
+    intercept = model.intercept_
+    pureza_necessaria = (ATR_desejado - intercept - coef[0] * estimativa_impurezas - coef[2] * estimativa_precipitacao) / coef[1]
+    return pureza_necessaria
+
+# Função principal do Streamlit
+def atr():
+    st.set_page_config(page_title="Análise de ATR e Impurezas", page_icon="📊", layout="wide")
+    st.title("Análise de ATR e Impurezas")
+    
+    # Carregar dados
+    df = carregar_dados()
+    
+    # Input do usuário
+    ATR_desejado = st.number_input("ATR Desejado:", min_value=0.0, value=130.0)
+    estimativa_precipitacao = st.number_input("Estimativa de Preciptação:", min_value=0.0, value=100.0)
+    estimativa_impurezas = st.number_input("Estimativa de Impurezas Totais:", min_value=0.0, value=18.0)
+    
+    if st.button("Calcular"):
+        resultados = treinar_modelos(df)
+        
+        # Exibir resultados
+        st.subheader("Resultados dos Modelos")
+        for nome, resultado in resultados.items():
+            st.write(f"**{nome}** - R²: {resultado['R²']:.2f}, RMSE: {resultado['RMSE']:.2f}")
+        
+        # Cálculo da pureza necessária
+        model_lr = resultados["Regressão Linear"]['model']
+        pureza_necessaria = calcular_pureza_necessaria(ATR_desejado, estimativa_precipitacao, estimativa_impurezas, model_lr)
+        st.write(f'Para alcançar um ATR de {ATR_desejado}, com preciptação de {estimativa_precipitacao} e impurezas totais de {estimativa_impurezas}, é necessário uma pureza de aproximadamente {pureza_necessaria:.2f}.')
+        
+        # Gráficos de valores reais vs preditos
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=df.index, y=df['ATR'], mode='lines', name='Real', line=dict(color='blue')))
+        fig.add_trace(go.Scatter(x=df.index, y=resultados['Random Forest']['y_pred'], mode='lines', name='Predito Random Forest', line=dict(dash='dash')))
+        fig.update_layout(title='Valores Reais vs Preditos do ATR', xaxis_title='Índice', yaxis_title='ATR')
+        st.plotly_chart(fig)
+
+
+
+
+
+
+
+
+
 def calcular_var(data, n_days, current_price, z_score):
     data['Returns'] = data['Adj Close'].pct_change()
     lambda_ = 0.94
@@ -1094,7 +1184,7 @@ def main():
     st.set_page_config(page_title="Gestão de Risco na Usina de Açúcar", page_icon="📈", layout="wide")
 
     st.sidebar.title("Menu")
-    page = st.sidebar.radio("Selecione uma opção", ["Introdução", "Metas", "Simulação de Opções", "Monte Carlo", "Mercado", "Risco", "Breakeven", "Black Scholes", "Cenários", "VaR"])
+    page = st.sidebar.radio("Selecione uma opção", ["Introdução", "Metas", "ATR","Simulação de Opções", "Monte Carlo", "Mercado", "Risco", "Breakeven", "Black Scholes", "Cenários", "VaR"])
 
     if page == "Introdução":
         st.title("Gestão de Risco e Derivativos")
@@ -1124,6 +1214,8 @@ def main():
             st.line_chart(mtm_data.set_index('Date'), use_container_width=True)
     elif page == "Simulação de Opções":
         simulacao_opcoes()
+    elif page == "ATR":
+        atr()        
     elif page == "Monte Carlo":
         monte_carlo()
     elif page == "Mercado":
