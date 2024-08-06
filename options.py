@@ -31,20 +31,17 @@ from sklearn.ensemble import RandomForestRegressor
 from xgboost import XGBRegressor
 from sklearn.metrics import r2_score, mean_squared_error
 
-# Função para carregar dados
 @st.cache_data
-def carregar_dados():
+def load_dados():
     df = pd.read_excel('Historico Impurezas.xlsx')
     df = df.dropna()
     df['Impureza Total'] = df['Impureza Vegetal'] + df['Impureza Mineral']
     return df
 
-# Função para treinar modelos e calcular métricas
 def treinar_modelos(df):
     X = df[['Impureza Total', 'Pureza', 'Preciptação']]
     y = df['ATR']
     
-    # Modelos
     models = {
         "Regressão Linear": LinearRegression(),
         "Random Forest": RandomForestRegressor(n_estimators=100, random_state=42),
@@ -62,32 +59,27 @@ def treinar_modelos(df):
     
     return resultados
 
-# Função para calcular pureza necessária
 def calcular_pureza_necessaria(ATR_desejado, estimativa_precipitacao, estimativa_impurezas, model):
     coef = model.coef_
     intercept = model.intercept_
     pureza_necessaria = (ATR_desejado - intercept - coef[0] * estimativa_impurezas - coef[2] * estimativa_precipitacao) / coef[1]
     return pureza_necessaria
 
-# Função para plotar gráficos de dispersão
 def plotar_graficos_dispersao(df):
     fig = plt.figure(figsize=(18, 6))
     
-    # Gráfico 1: Impureza Total vs ATR
     ax1 = fig.add_subplot(131)
     ax1.scatter(df['Impureza Total'], df['ATR'], color='blue')
     ax1.set_title('Impureza Total vs ATR')
     ax1.set_xlabel('Impureza Total')
     ax1.set_ylabel('ATR')
     
-    # Gráfico 2: Pureza vs ATR
     ax2 = fig.add_subplot(132)
     ax2.scatter(df['Pureza'], df['ATR'], color='red')
     ax2.set_title('Pureza vs ATR')
     ax2.set_xlabel('Pureza')
     ax2.set_ylabel('ATR')
     
-    # Gráfico 3: Preciptação vs ATR
     ax3 = fig.add_subplot(133)
     ax3.scatter(df['Preciptação'], df['ATR'], color='green')
     ax3.set_title('Preciptação vs ATR')
@@ -96,24 +88,18 @@ def plotar_graficos_dispersao(df):
     
     st.pyplot(fig)
 
-# Função para plotar heatmap de correlação
 def plotar_heatmap(df):
-    corr = df.corr()
+    cols = ['ATR', 'Impureza Total', 'Pureza', 'Preciptação']
+    corr = df[cols].corr()
     fig, ax = plt.subplots()
     sns.heatmap(corr, annot=True, cmap='coolwarm', ax=ax)
     st.pyplot(fig)
 
-# Função principal do ATR
 def atr():
     st.title("Análise de ATR e Impurezas")
     
-    # Carregar dados
-    df = carregar_dados()
+    df = load_dados()
     
-    # Filtrar apenas colunas numéricas para o cálculo da correlação
-    df_numerico = df.select_dtypes(include=[np.number])
-    
-    # Input do usuário
     ATR_desejado = st.number_input("ATR Desejado:", min_value=0.0, value=130.0)
     estimativa_precipitacao = st.number_input("Estimativa de Preciptação:", min_value=0.0, value=100.0)
     estimativa_impurezas = st.number_input("Estimativa de Impurezas Totais:", min_value=0.0, value=18.0)
@@ -121,37 +107,30 @@ def atr():
     if st.button("Calcular"):
         resultados = treinar_modelos(df)
         
-        # Exibir resultados
         st.subheader("Resultados dos Modelos")
         for nome, resultado in resultados.items():
             st.write(f"**{nome}** - R²: {resultado['R²']:.2f}, RMSE: {resultado['RMSE']:.2f}")
         
-        # Cálculo da pureza necessária
         model_lr = resultados["Regressão Linear"]['model']
         pureza_necessaria = calcular_pureza_necessaria(ATR_desejado, estimativa_precipitacao, estimativa_impurezas, model_lr)
         st.write(f'Para alcançar um ATR de {ATR_desejado}, com preciptação de {estimativa_precipitacao} e impurezas totais de {estimativa_impurezas}, é necessário uma pureza de aproximadamente {pureza_necessaria:.2f}.')
         
-        # Gráficos de valores reais vs preditos
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=df.index, y=df['ATR'], mode='lines', name='Real', line=dict(color='blue')))
         fig.add_trace(go.Scatter(x=df.index, y=resultados['Random Forest']['y_pred'], mode='lines', name='Predito Random Forest', line=dict(dash='dash')))
         fig.update_layout(title='Valores Reais vs Preditos do ATR', xaxis_title='Índice', yaxis_title='ATR')
         st.plotly_chart(fig)
         
-        # Plotar gráficos de dispersão
         st.subheader("Gráficos de Dispersão Comparativos")
         plotar_graficos_dispersao(df)
         
-        # Plotar heatmap de correlação
         st.subheader("Heatmap de Correlação")
-        plotar_heatmap(df_numerico)
+        plotar_heatmap(df)
         
-        # Explicabilidade das variáveis
         st.subheader("Explicabilidade das Variáveis")
         st.write("Explicabilidade de 'Impureza Total': baixa")
         st.write("Explicabilidade de 'Pureza': alta")
         st.write("Explicabilidade de 'Preciptação': moderada")
-
 
 
 
