@@ -32,6 +32,133 @@ from xgboost import XGBRegressor
 from sklearn.metrics import r2_score, mean_squared_error
 
 
+import pandas as pd
+import numpy as np
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score
+import statsmodels.api as sm
+import seaborn as sns
+import matplotlib.pyplot as plt
+import plotly.graph_objs as go
+import plotly.subplots as sp
+import streamlit as st
+
+# Função para carregar e transformar os dados
+@st.cache
+def load_and_transform_data(file_path):
+    df = pd.read_excel(file_path)
+    
+    df['Oferta Moeda Brasileira - M2'] = df['Oferta Moeda Brasileira - M2'] / 1000
+    df['Juros Brasileiros(%)'] = df['Juros Brasileiros(%)'] / 100
+    df['Juros Americanos(%)'] = df['Juros Americanos(%)'] / 100
+
+    df_transformed = df.copy()
+    df_transformed['Razao_Juros'] = df['Juros Americanos(%)'] / df['Juros Brasileiros(%)']
+    df_transformed['Log_Razao_Juros'] = np.log(df_transformed['Razao_Juros'])
+    df_transformed['Dif_Prod_Industrial'] = df['Prod Industrial Americana'] - df['Prod Industrial brasileira']
+    df_transformed['Dif_Oferta_Moeda'] = df['Oferta Moeda Americana - M2'] - df['Oferta Moeda Brasileira - M2']
+
+    df_transformed = df_transformed[['Data', 'Log_Razao_Juros', 'Dif_Prod_Industrial', 'Dif_Oferta_Moeda', 'Taxa de Câmbio']]
+    df_transformed.set_index('Data', inplace=True)
+
+    return df_transformed
+
+# Função para prever a taxa de câmbio com base nas premissas do usuário
+def prever_taxa_cambio(model, juros_br, juros_eua, prod_ind_br, prod_ind_eua, oferta_moeda_br, oferta_moeda_eua):
+    razao_juros = juros_eua / juros_br
+    log_razao_juros = np.log(razao_juros)
+    dif_prod_industrial = prod_ind_eua - prod_ind_br
+    dif_oferta_moeda = oferta_moeda_eua - (oferta_moeda_br / 1000)
+    X_novo = np.array([[log_razao_juros, dif_prod_industrial, dif_oferta_moeda]])
+    taxa_cambio_prevista = model.predict(X_novo)
+    return taxa_cambio_prevista[0]
+
+# Função principal
+def regressaoDolar():
+    st.set_page_config(page_title="Previsão da Taxa de Câmbio", page_icon="📈", layout="wide")
+
+    st.title("Previsão da Taxa de Câmbio")
+    st.write("Insira as premissas abaixo e clique em 'Gerar Regressão' para prever a taxa de câmbio.")
+
+    # Inputs do usuário
+    juros_br_proj = st.number_input("Taxa de Juros Brasileira (%)", value=10.56) / 100
+    juros_eua_proj = st.number_input("Taxa de Juros Americana (%)", value=5.33) / 100
+    prod_ind_br_proj = st.number_input("Produção Industrial Brasileira", value=103.8)
+    prod_ind_eua_proj = st.number_input("Produção Industrial Americana", value=103.3)
+    oferta_moeda_br_proj = st.number_input("Oferta de Moeda Brasileira - M2 (em milhões)", value=5014000)
+    oferta_moeda_eua_proj = st.number_input("Oferta de Moeda Americana - M2 (em bilhões)", value=20841)
+
+    # Botão para gerar a regressão
+    if st.button("Gerar Regressão"):
+        df_transformed = load_and_transform_data('dadosReg.xls')
+
+        X = df_transformed[['Log_Razao_Juros', 'Dif_Prod_Industrial', 'Dif_Oferta_Moeda']]
+        y = df_transformed['Taxa de Câmbio']
+
+        model = LinearRegression()
+        model.fit(X, y)
+
+        y_pred = model.predict(X)
+        mse = mean_squared_error(y, y_pred)
+        r2 = r2_score(y, y_pred)
+
+        coefficients = model.coef_
+        intercept = model.intercept_
+
+        X_with_const = sm.add_constant(X)
+        model_sm = sm.OLS(y, X_with_const).fit()
+        p_values = model_sm.pvalues
+        feature_importance = np.abs(coefficients)
+
+        st.write(f'Coeficientes: {coefficients}')
+        st.write(f'Intercepto: {intercept}')
+        st.write(f'MSE: {mse}')
+        st.write(f'R²: {r2}')
+        st.write(f'p-values: {p_values}')
+        st.write(f'Feature Importance: {feature_importance}')
+
+        taxa_cambio_prevista = prever_taxa_cambio(model, juros_br_proj, juros_eua_proj, prod_ind_br_proj, prod_ind_eua_proj, oferta_moeda_br_proj, oferta_moeda_eua_proj)
+        st.write(f'Taxa de câmbio prevista: {taxa_cambio_prevista:.4f}')
+
+        # Visualizando a matriz de correlação
+        df_with_target = X.copy()
+        df_with_target['Taxa de Câmbio'] = y
+        corr_matrix = df_with_target.corr()
+
+        fig, ax = plt.subplots(figsize=(10, 8))
+        sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', fmt='.2f', linewidths=0.5, ax=ax)
+        st.pyplot(fig)
+
+        # Gráficos de dispersão
+        fig = sp.make_subplots(rows=1, cols=3, subplot_titles=["Log_Razao_Juros vs Taxa de Câmbio", "Dif_Prod_Industrial vs Taxa de Câmbio", "Dif_Oferta_Moeda vs Taxa de Câmbio"])
+
+        scatter1 = go.Scatter(x=df_with_target['Log_Razao_Juros'], y=df_with_target['Taxa de Câmbio'], mode='markers', name='Log_Razao_Juros vs Taxa de Câmbio')
+        fig.add_trace(scatter1, row=1, col=1)
+        scatter2 = go.Scatter(x=df_with_target['Dif_Prod_Industrial'], y=df_with_target['Taxa de Câmbio'], mode='markers', name='Dif_Prod_Industrial vs Taxa de Câmbio')
+        fig.add_trace(scatter2, row=1, col=2)
+        scatter3 = go.Scatter(x=df_with_target['Dif_Oferta_Moeda'], y=df_with_target['Taxa de Câmbio'], mode='markers', name='Dif_Oferta_Moeda vs Taxa de Câmbio')
+        fig.add_trace(scatter3, row=1, col=3)
+
+        fig.update_layout(height=400, width=1200, title_text="Gráficos de Dispersão: Taxa de Câmbio vs Variáveis Remanescentes")
+        st.plotly_chart(fig)
+
+        # Gráfico com valor predito e valor real
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=df_transformed.index, y=y, mode='lines', name='Valor Real'))
+        fig.add_trace(go.Scatter(x=df_transformed.index, y=y_pred, mode='lines', name='Valor Predito'))
+
+        fig.update_layout(title='Valor Real vs Valor Predito', xaxis_title='Data', yaxis_title='Taxa de Câmbio')
+        st.plotly_chart(fig)
+
+
+
+
+
+
+
+
+
+
 @st.cache_data
 def load_dados():
     df = pd.read_excel('Historico Impurezas.xlsx')
@@ -1210,7 +1337,7 @@ def main():
     st.set_page_config(page_title="Gestão de Risco na Usina de Açúcar", page_icon="📈", layout="wide")
 
     st.sidebar.title("Menu")
-    page = st.sidebar.radio("Selecione uma opção", ["Introdução","ATR" ,"Metas", "Simulação de Opções", "Monte Carlo", "Mercado", "Risco", "Breakeven", "Black Scholes", "Cenários", "VaR"])
+    page = st.sidebar.radio("Selecione uma opção", ["Introdução","ATR" ,"Metas","Regressão Dólar", "Simulação de Opções", "Monte Carlo", "Mercado", "Risco", "Breakeven", "Black Scholes", "Cenários", "VaR"])
 
     if page == "Introdução":
         st.title("Gestão de Risco e Derivativos")
@@ -1241,7 +1368,9 @@ def main():
     elif page == "Simulação de Opções":
         simulacao_opcoes()
     elif page == "ATR":
-        atr()        
+        atr()
+    elif page == "Regressão Dólar":
+        regressaoDolar()   
     elif page == "Monte Carlo":
         monte_carlo()
     elif page == "Mercado":
