@@ -109,12 +109,6 @@ def regressaoDolar():
         p_values = model_sm.pvalues
         feature_importance = np.abs(coefficients)
 
-        st.write(f'Coeficientes: {coefficients}')
-        st.write(f'Intercepto: {intercept}')
-        st.write(f'MSE: {mse}')
-        st.write(f'R²: {r2}')
-        st.write(f'p-values: {p_values}')
-        st.write(f'Feature Importance: {feature_importance}')
 
         taxa_cambio_prevista = prever_taxa_cambio(model, juros_br_proj, juros_eua_proj, prod_ind_br_proj, prod_ind_eua_proj, oferta_moeda_br_proj, oferta_moeda_eua_proj)
         st.write(f'Taxa de câmbio prevista: {taxa_cambio_prevista:.4f}')
