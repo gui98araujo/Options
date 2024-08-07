@@ -46,7 +46,6 @@ def treinar_modelos(df):
     models = {
         "Regressão Linear": LinearRegression(),
         "Random Forest": RandomForestRegressor(n_estimators=100, random_state=42),
-        "XGBoost": XGBRegressor(n_estimators=100, random_state=42),
         "Ridge": Ridge(alpha=1.0)
     }
     
