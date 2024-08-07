@@ -20,6 +20,7 @@ import plotly.express as px
 import plotly.graph_objs as go
 from datetime import datetime, timedelta
 
+pip install --upgrade -r requirements.txt
 
 
 import streamlit as st
