@@ -75,7 +75,6 @@ def prever_taxa_cambio(model, juros_br, juros_eua, prod_ind_br, prod_ind_eua, of
 
 # Função principal
 def regressaoDolar():
-    st.set_page_config(page_title="Previsão da Taxa de Câmbio", page_icon="📈", layout="wide")
 
     st.title("Previsão da Taxa de Câmbio")
     st.write("Insira as premissas abaixo e clique em 'Gerar Regressão' para prever a taxa de câmbio.")
