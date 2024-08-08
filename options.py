@@ -1325,102 +1325,122 @@ def calcular_valor_justo(pernas, S, T, r, sigma):
             valor_justo -= preco_opcao
     return valor_justo
 
+# Função de autenticação
+def login():
+    st.title("Login")
+    st.text_input("Login", key="username")
+    st.text_input("Senha", type="password", key="password")
+    
+    if st.button("Entrar"):
+        if st.session_state.username == "gestao.risco@ibea.com.br" and st.session_state.password == "Risco123$":
+            st.session_state.logged_in = True
+            st.success("Login realizado com sucesso!")
+        else:
+            st.error("Login ou senha incorretos.")
+
 # Função principal
 def main():
-    st.set_page_config(page_title="Gestão de Risco na Usina de Açúcar", page_icon="📈", layout="wide")
+    if "logged_in" not in st.session_state:
+        st.session_state.logged_in = False
 
-    st.sidebar.title("Menu")
-    page = st.sidebar.radio("Selecione uma opção", ["Introdução","ATR" ,"Metas","Regressão Dólar", "Simulação de Opções", "Monte Carlo", "Mercado", "Risco", "Breakeven", "Black Scholes", "Cenários", "VaR"])
+    if not st.session_state.logged_in:
+        login()
+    else:
+        st.set_page_config(page_title="Gestão de Risco na Usina de Açúcar", page_icon="📈", layout="wide")
+        
+        st.sidebar.title("Menu")
+        page = st.sidebar.radio("Selecione uma opção", ["Introdução", "ATR", "Metas", "Regressão Dólar", "Simulação de Opções", "Monte Carlo", "Mercado", "Risco", "Breakeven", "Black Scholes", "Cenários", "VaR"])
 
-    if page == "Introdução":
-        st.title("Gestão de Risco e Derivativos")
-        st.write("""
-                 A indústria açucareira é um dos pilares da economia em muitos países, mas está sujeita a flutuações significativas nos preços do açúcar e do dólar, entre outros fatores. Nesse cenário, a gestão de riscos desempenha um papel fundamental para garantir a estabilidade e a lucratividade das operações.
+        if page == "Introdução":
+            st.title("Gestão de Risco e Derivativos")
+            st.write("""
+                A indústria açucareira é um dos pilares da economia em muitos países, mas está sujeita a flutuações significativas nos preços do açúcar e do dólar, entre outros fatores. Nesse cenário, a gestão de riscos desempenha um papel fundamental para garantir a estabilidade e a lucratividade das operações.
                  
-                 **Proteção Cambial:**
-                 A volatilidade no mercado de câmbio pode afetar diretamente os resultados financeiros de uma usina de açúcar, especialmente em países onde a moeda local é suscetível a oscilações. A proteção cambial é uma estratégia essencial para mitigar esse risco. Uma maneira comum de proteger-se é através do uso de contratos futuros de câmbio, que permitem fixar uma taxa de câmbio para transações futuras em moeda estrangeira, garantindo assim um preço previsível para as exportações de açúcar.
+                **Proteção Cambial:**
+                A volatilidade no mercado de câmbio pode afetar diretamente os resultados financeiros de uma usina de açúcar, especialmente em países onde a moeda local é suscetível a oscilações. A proteção cambial é uma estratégia essencial para mitigar esse risco. Uma maneira comum de proteger-se é através do uso de contratos futuros de câmbio, que permitem fixar uma taxa de câmbio para transações futuras em moeda estrangeira, garantindo assim um preço previsível para as exportações de açúcar.
 
-                 **Fixações:**
-                 Além da proteção cambial, as usinas de açúcar frequentemente recorrem a estratégias de fixações para garantir um preço mínimo para sua produção. Isso pode ser feito através de contratos a termo ou swaps, onde um preço é acordado antecipadamente para uma determinada quantidade de açúcar. Essas fixações fornecem uma certa segurança contra quedas abruptas nos preços do açúcar, permitindo que a usina planeje suas operações com mais confiança.
+                **Fixações:**
+                Além da proteção cambial, as usinas de açúcar frequentemente recorrem a estratégias de fixações para garantir um preço mínimo para sua produção. Isso pode ser feito através de contratos a termo ou swaps, onde um preço é acordado antecipadamente para uma determinada quantidade de açúcar. Essas fixações fornecem uma certa segurança contra quedas abruptas nos preços do açúcar, permitindo que a usina planeje suas operações com mais confiança.
 
-                 **Mercado de Opções do Açúcar:**
-                 Outra ferramenta importante na gestão de riscos é o mercado de opções do açúcar. As opções oferecem às usinas de açúcar a flexibilidade de proteger-se contra movimentos desfavoráveis nos preços do açúcar, enquanto ainda se beneficiam de movimentos favoráveis. Por exemplo, uma usina pode comprar opções de venda para proteger-se contra quedas nos preços do açúcar, enquanto ainda pode aproveitar os aumentos de preço se o mercado se mover a seu favor.
+                **Mercado de Opções do Açúcar:**
+                Outra ferramenta importante na gestão de riscos é o mercado de opções do açúcar. As opções oferecem às usinas de açúcar a flexibilidade de proteger-se contra movimentos desfavoráveis nos preços do açúcar, enquanto ainda se beneficiam de movimentos favoráveis. Por exemplo, uma usina pode comprar opções de venda para proteger-se contra quedas nos preços do açúcar, enquanto ainda pode aproveitar os aumentos de preço se o mercado se mover a seu favor.
 
-                 Em resumo, a gestão de riscos na indústria açucareira é essencial para garantir a estabilidade financeira e o crescimento sustentável das usinas de açúcar. Estratégias como proteção cambial, fixações e o uso inteligente do mercado de opções são fundamentais para mitigar os riscos inerentes a esse setor e maximizar os retornos sobre o investimento.
-                 """)
+                Em resumo, a gestão de riscos na indústria açucareira é essencial para garantir a estabilidade financeira e o crescimento sustentável das usinas de açúcar. Estratégias como proteção cambial, fixações e o uso inteligente do mercado de opções são fundamentais para mitigar os riscos inerentes a esse setor e maximizar os retornos sobre o investimento.
+            """)
 
-    elif page == "Metas":
-        st.title("Metas")
-        st.write("Selecione a meta desejada:")
-        meta = st.slider("Meta:", min_value=2400, max_value=2800, value=2600, step=10)
-        st.write("Após selecionar a meta, clique no botão 'Calcular' para visualizar o gráfico.")
-        if st.button("Calcular"):
-            plot_heatmap(meta)
-            mtm_data = calcular_mtm(meta)
-            st.line_chart(mtm_data.set_index('Date'), use_container_width=True)
-    elif page == "Simulação de Opções":
-        simulacao_opcoes()
-    elif page == "ATR":
-        atr()
-    elif page == "Regressão Dólar":
-        regressaoDolar()   
-    elif page == "Monte Carlo":
-        monte_carlo()
-    elif page == "Mercado":
-        mercado()
-    elif page == "Risco":
-        risco()
-    elif page == "Breakeven":
-        breakeven()
-    elif page == "Cenários":
-        cenarios()
-    elif page == "VaR":
-        VaR()
-    elif page == "Black Scholes":
-        st.title("Cálculo de Opções usando o Modelo de Black-Scholes")
-        ticker_selection = st.radio("Selecione o ticker:", ['SBH25.NYB', 'SBV24.NYB'])
-        if ticker_selection == 'SBH25.NYB':
-            ticker = 'SBH25.NYB'
-            expiry_date = '2025-02-16'
-        else:
-            ticker = 'SBV24.NYB'
-            expiry_date = '2025-09-16'
-        
-        st.write(f"Ticker selecionado: {ticker}")
+        # As outras funções do menu continuam aqui...
+        elif page == "Metas":
+            st.title("Metas")
+            st.write("Selecione a meta desejada:")
+            meta = st.slider("Meta:", min_value=2400, max_value=2800, value=2600, step=10)
+            st.write("Após selecionar a meta, clique no botão 'Calcular' para visualizar o gráfico.")
+            if st.button("Calcular"):
+                plot_heatmap(meta)
+                mtm_data = calcular_mtm(meta)
+                st.line_chart(mtm_data.set_index('Date'), use_container_width=True)
+        elif page == "Simulação de Opções":
+            simulacao_opcoes()
+        elif page == "ATR":
+            atr()
+        elif page == "Regressão Dólar":
+            regressaoDolar()   
+        elif page == "Monte Carlo":
+            monte_carlo()
+        elif page == "Mercado":
+            mercado()
+        elif page == "Risco":
+            risco()
+        elif page == "Breakeven":
+            breakeven()
+        elif page == "Cenários":
+            cenarios()
+        elif page == "VaR":
+            VaR()
+        elif page == "Black Scholes":
+            st.title("Cálculo de Opções usando o Modelo de Black-Scholes")
+            ticker_selection = st.radio("Selecione o ticker:", ['SBH25.NYB', 'SBV24.NYB'])
+            if ticker_selection == 'SBH25.NYB':
+                ticker = 'SBH25.NYB'
+                expiry_date = '2025-02-16'
+            else:
+                ticker = 'SBV24.NYB'
+                expiry_date = '2025-09-16'
+            
+            st.write(f"Ticker selecionado: {ticker}")
 
-        # Adicionando campos para entrada de taxa de juros livre de risco e volatilidade implícita
-        risk_free_rate = st.number_input("Taxa de juros livre de risco:", min_value=0.0, value=0.005, step=0.0001, format="%.4f")
-        implied_volatility = st.number_input("Volatilidade implícita:", min_value=0.0, value=0.24, step=0.01, format="%.4f")
+            # Adicionando campos para entrada de taxa de juros livre de risco e volatilidade implícita
+            risk_free_rate = st.number_input("Taxa de juros livre de risco:", min_value=0.0, value=0.005, step=0.0001, format="%.4f")
+            implied_volatility = st.number_input("Volatilidade implícita:", min_value=0.0, value=0.24, step=0.01, format="%.4f")
 
-        # Perguntando ao usuário quantas pernas deseja simular
-        num_pernas = st.number_input("Quantas pernas deseja simular?", min_value=1, value=1, step=1)
-        
-        pernas = []
-        for i in range(num_pernas):
-            st.write(f"Configuração da perna {i+1}:")
-            tipo_opcao = st.selectbox(f"Tipo de opção da perna {i+1}:", ['call', 'put'], key=f'tipo_opcao_{i}')
-            compra_venda = st.selectbox(f"Compra ou venda da perna {i+1}:", ['compra', 'venda'], key=f'compra_venda_{i}')
-            strike = st.number_input(f"Strike da perna {i+1}:", min_value=0.0, step=0.01, format="%.2f", key=f'strike_{i}')
-            pernas.append({'tipo_opcao': tipo_opcao, 'compra_venda': compra_venda, 'strike': strike})
+            # Perguntando ao usuário quantas pernas deseja simular
+            num_pernas = st.number_input("Quantas pernas deseja simular?", min_value=1, value=1, step=1)
+            
+            pernas = []
+            for i in range(num_pernas):
+                st.write(f"Configuração da perna {i+1}:")
+                tipo_opcao = st.selectbox(f"Tipo de opção da perna {i+1}:", ['call', 'put'], key=f'tipo_opcao_{i}')
+                compra_venda = st.selectbox(f"Compra ou venda da perna {i+1}:", ['compra', 'venda'], key=f'compra_venda_{i}')
+                strike = st.number_input(f"Strike da perna {i+1}:", min_value=0.0, step=0.01, format="%.2f", key=f'strike_{i}')
+                pernas.append({'tipo_opcao': tipo_opcao, 'compra_venda': compra_venda, 'strike': strike})
 
-        if st.button("Calcular"):
-            data = yf.download(ticker, start='2024-04-30', end=expiry_date)
-            S = data['Close'].iloc[-1]  # Preço atual do ativo
-            r = risk_free_rate  # Taxa de juros livre de risco definida pelo usuário
-            sigma = implied_volatility  # Volatilidade do ativo definida pelo usuário
-            strike_prices = np.arange(15, 27.25, 0.25)
-            expiry = (pd.Timestamp(expiry_date) - pd.Timestamp('today')).days / 365
+            if st.button("Calcular"):
+                data = yf.download(ticker, start='2024-04-30', end=expiry_date)
+                S = data['Close'].iloc[-1]  # Preço atual do ativo
+                r = risk_free_rate  # Taxa de juros livre de risco definida pelo usuário
+                sigma = implied_volatility  # Volatilidade do ativo definida pelo usuário
+                strike_prices = np.arange(15, 27.25, 0.25)
+                expiry = (pd.Timestamp(expiry_date) - pd.Timestamp('today')).days / 365
 
-            call_prices = [black_scholes(S, K, expiry, r, sigma, option_type='call') for K in strike_prices]
-            put_prices = [black_scholes(S, K, expiry, r, sigma, option_type='put') for K in strike_prices]
+                call_prices = [black_scholes(S, K, expiry, r, sigma, option_type='call') for K in strike_prices]
+                put_prices = [black_scholes(S, K, expiry, r, sigma, option_type='put') for K in strike_prices]
 
-            option_data = pd.DataFrame({'Strike Price': strike_prices,
-                                        'Call Price': call_prices,
-                                        'Put Price': put_prices})
-            display_option_tables(option_data)
+                option_data = pd.DataFrame({'Strike Price': strike_prices,
+                                            'Call Price': call_prices,
+                                            'Put Price': put_prices})
+                display_option_tables(option_data)
 
-            valor_justo = calcular_valor_justo(pernas, S, expiry, r, sigma)
-            st.write(f"Valor justo da operação combinada: {valor_justo:.2f}")
+                valor_justo = calcular_valor_justo(pernas, S, expiry, r, sigma)
+                st.write(f"Valor justo da operação combinada: {valor_justo:.2f}")
 
 if __name__ == "__main__":
     main()
