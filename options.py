@@ -1287,6 +1287,82 @@ def cenarios():
         st.write("Opção inválida")
 
 
+def black_scholes(S, K, T, r, sigma, option_type):
+    d1 = (np.log(S / K) + (r + 0.5 * sigma ** 2) * T) / (sigma * np.sqrt(T))
+    d2 = d1 - sigma * np.sqrt(T)
+
+    if option_type == 'call':
+        return S * si.norm.cdf(d1, 0.0, 1.0) - K * np.exp(-r * T) * si.norm.cdf(d2, 0.0, 1.0)
+    elif option_type == 'put':
+        return K * np.exp(-r * T) * si.norm.cdf(-d2, 0.0, 1.0) - S * si.norm.cdf(-d1, 0.0, 1.0)
+    else:
+        raise ValueError("Tipo de opção inválido. Use 'call' ou 'put'.")
+
+def plot_option_prices(S, strike_prices, T, r, sigma_values, option_type):
+    fig = go.Figure()
+
+    for sigma in sigma_values:
+        prices = [black_scholes(S, K, T, r, sigma, option_type) for K in strike_prices]
+        fig.add_trace(go.Scatter(x=strike_prices, y=prices, mode='lines', name=f'Volatilidade = {sigma}'))
+
+    fig.update_layout(
+        title=f'Preços das Opções ({option_type}) em Função do Preço de Exercício',
+        xaxis_title='Preço de Exercício (Strike Price)',
+        yaxis_title='Preço da Opção',
+        legend_title='Volatilidade'
+    )
+    return fig
+
+def blackscholes():
+    st.title("Cálculo de Opções usando o Modelo de Black-Scholes")
+
+    # Selecione o ticker e data de expiração
+    ticker_selection = st.radio("Selecione o ticker:", ['SBH25.NYB', 'SBV24.NYB'])
+    expiry_date = '2025-02-16' if ticker_selection == 'SBH25.NYB' else '2025-09-16'
+    
+    st.write(f"Ticker selecionado: {ticker_selection}")
+
+    risk_free_rate = st.number_input("Taxa de juros livre de risco:", min_value=0.0, value=0.005, step=0.0001, format="%.4f")
+    implied_volatility = st.number_input("Volatilidade implícita:", min_value=0.0, value=0.24, step=0.01, format="%.4f")
+
+    num_pernas = st.number_input("Quantas pernas deseja simular?", min_value=1, value=1, step=1)
+    
+    pernas = []
+    for i in range(num_pernas):
+        st.write(f"Configuração da perna {i+1}:")
+        tipo_opcao = st.selectbox(f"Tipo de opção da perna {i+1}:", ['call', 'put'], key=f'tipo_opcao_{i}')
+        compra_venda = st.selectbox(f"Compra ou venda da perna {i+1}:", ['compra', 'venda'], key=f'compra_venda_{i}')
+        strike = st.number_input(f"Strike da perna {i+1}:", min_value=0.0, step=0.01, format="%.2f", key=f'strike_{i}')
+        pernas.append({'tipo_opcao': tipo_opcao, 'compra_venda': compra_venda, 'strike': strike})
+
+    if st.button("Calcular"):
+        data = yf.download(ticker_selection, start='2024-04-30', end=expiry_date)
+        S = data['Close'].iloc[-1]  # Preço atual do ativo
+        r = risk_free_rate
+        sigma = implied_volatility
+        strike_prices = np.arange(15, 27.25, 0.25)
+        expiry = (pd.Timestamp(expiry_date) - pd.Timestamp('today')).days / 365
+
+        # Calcula preços das opções
+        call_prices = [black_scholes(S, K, expiry, r, sigma, option_type='call') for K in strike_prices]
+        put_prices = [black_scholes(S, K, expiry, r, sigma, option_type='put') for K in strike_prices]
+
+        option_data = pd.DataFrame({'Strike Price': strike_prices,
+                                    'Call Price': call_prices,
+                                    'Put Price': put_prices})
+        st.write(option_data)
+
+        # Valor justo da operação combinada (opcional)
+        # valor_justo = calcular_valor_justo(pernas, S, expiry, r, sigma)
+        # st.write(f"Valor justo da operação combinada: {valor_justo:.2f}")
+
+        # Gráficos interativos com Plotly
+        sigma_values = [0.20, 0.24, 0.30]
+        fig_call = plot_option_prices(S, strike_prices, expiry, r, sigma_values, 'call')
+        fig_put = plot_option_prices(S, strike_prices, expiry, r, sigma_values, 'put')
+
+        st.plotly_chart(fig_call)
+        st.plotly_chart(fig_put)
 
 
 
@@ -1397,50 +1473,6 @@ def main():
         elif page == "VaR":
             VaR()
         elif page == "Black Scholes":
-            st.title("Cálculo de Opções usando o Modelo de Black-Scholes")
-            ticker_selection = st.radio("Selecione o ticker:", ['SBH25.NYB', 'SBV24.NYB'])
-            if ticker_selection == 'SBH25.NYB':
-                ticker = 'SBH25.NYB'
-                expiry_date = '2025-02-16'
-            else:
-                ticker = 'SBV24.NYB'
-                expiry_date = '2025-09-16'
-            
-            st.write(f"Ticker selecionado: {ticker}")
-
-            # Adicionando campos para entrada de taxa de juros livre de risco e volatilidade implícita
-            risk_free_rate = st.number_input("Taxa de juros livre de risco:", min_value=0.0, value=0.005, step=0.0001, format="%.4f")
-            implied_volatility = st.number_input("Volatilidade implícita:", min_value=0.0, value=0.24, step=0.01, format="%.4f")
-
-            # Perguntando ao usuário quantas pernas deseja simular
-            num_pernas = st.number_input("Quantas pernas deseja simular?", min_value=1, value=1, step=1)
-            
-            pernas = []
-            for i in range(num_pernas):
-                st.write(f"Configuração da perna {i+1}:")
-                tipo_opcao = st.selectbox(f"Tipo de opção da perna {i+1}:", ['call', 'put'], key=f'tipo_opcao_{i}')
-                compra_venda = st.selectbox(f"Compra ou venda da perna {i+1}:", ['compra', 'venda'], key=f'compra_venda_{i}')
-                strike = st.number_input(f"Strike da perna {i+1}:", min_value=0.0, step=0.01, format="%.2f", key=f'strike_{i}')
-                pernas.append({'tipo_opcao': tipo_opcao, 'compra_venda': compra_venda, 'strike': strike})
-
-            if st.button("Calcular"):
-                data = yf.download(ticker, start='2024-04-30', end=expiry_date)
-                S = data['Close'].iloc[-1]  # Preço atual do ativo
-                r = risk_free_rate  # Taxa de juros livre de risco definida pelo usuário
-                sigma = implied_volatility  # Volatilidade do ativo definida pelo usuário
-                strike_prices = np.arange(15, 27.25, 0.25)
-                expiry = (pd.Timestamp(expiry_date) - pd.Timestamp('today')).days / 365
-
-                call_prices = [black_scholes(S, K, expiry, r, sigma, option_type='call') for K in strike_prices]
-                put_prices = [black_scholes(S, K, expiry, r, sigma, option_type='put') for K in strike_prices]
-
-                option_data = pd.DataFrame({'Strike Price': strike_prices,
-                                            'Call Price': call_prices,
-                                            'Put Price': put_prices})
-                display_option_tables(option_data)
-
-                valor_justo = calcular_valor_justo(pernas, S, expiry, r, sigma)
-                st.write(f"Valor justo da operação combinada: {valor_justo:.2f}")
-
+            blackscholes()
 if __name__ == "__main__":
     main()
