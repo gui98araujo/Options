@@ -1298,7 +1298,7 @@ def black_scholes(S, K, T, r, sigma, option_type):
     else:
         raise ValueError("Tipo de opção inválido. Use 'call' ou 'put'.")
 
-def simulador_black_scholes():
+def blackscholes():
     # Parâmetros iniciais
     assets = {
         'SBV24.NYB': datetime(2024, 9, 16),
