@@ -19,7 +19,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objs as go
 from datetime import datetime, timedelta
-
+import scipy.stats as si
 
 
 import streamlit as st
