@@ -1308,8 +1308,8 @@ def blackscholes():
     risk_free_rate = 0.053
 
     volatilities = {
-        'SBV24.NYB': 0.2543,
-        'SBH25.NYB': 0.2353
+        'SBV24.NYB': 0.2500,
+        'SBH25.NYB': 0.2418
     }
 
     # Interface do Streamlit
