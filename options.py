@@ -1360,20 +1360,48 @@ def blackscholes():
         st.write("Tabela de Preços das Opções")
         st.write(round(df_options, 2))
 
-        # Cria gráficos interativos com Plotly
-        fig = go.Figure()
+        # Gráfico de Preços das Opções em Função do Strike
+        fig_strike = go.Figure()
 
         if option_type == 'call':
-            fig.add_trace(go.Scatter(x=df_options['Strike'], y=df_options['Call Prices'], mode='lines', name='Call Prices'))
+            fig_strike.add_trace(go.Scatter(x=df_options['Strike'], y=df_options['Call Prices'], mode='lines', name='Call Prices'))
         elif option_type == 'put':
-            fig.add_trace(go.Scatter(x=df_options['Strike'], y=df_options['Put Prices'], mode='lines', name='Put Prices'))
+            fig_strike.add_trace(go.Scatter(x=df_options['Strike'], y=df_options['Put Prices'], mode='lines', name='Put Prices'))
 
-        fig.update_layout(title=f"Preços das Opções {option_type.upper()} - {asset}",
+        fig_strike.update_layout(title=f"Preços das Opções {option_type.upper()} - {asset}",
                           xaxis_title="Strike Price",
                           yaxis_title="Option Price",
                           template="plotly_dark")
 
-        st.plotly_chart(fig)
+        st.plotly_chart(fig_strike)
+
+        # Gráfico de Preços das Opções em Função do Tempo até a Expiração
+        times_to_expiration = np.linspace(0.01, T, 100)
+        option_prices_vs_time = [black_scholes(S, strike_price, t, risk_free_rate, sigma, option_type) for t in times_to_expiration]
+
+        fig_time = go.Figure()
+        fig_time.add_trace(go.Scatter(x=times_to_expiration, y=option_prices_vs_time, mode='lines', name='Option Price'))
+
+        fig_time.update_layout(title=f"Preço da {option_type.upper()} em Função do Tempo - {asset}",
+                          xaxis_title="Time to Expiration (Years)",
+                          yaxis_title="Option Price",
+                          template="plotly_dark")
+
+        st.plotly_chart(fig_time)
+
+        # Gráfico de Preços das Opções em Função da Volatilidade
+        volatilities_range = np.linspace(0.1, 0.5, 100)
+        option_prices_vs_volatility = [black_scholes(S, strike_price, T, risk_free_rate, vol, option_type) for vol in volatilities_range]
+
+        fig_volatility = go.Figure()
+        fig_volatility.add_trace(go.Scatter(x=volatilities_range, y=option_prices_vs_volatility, mode='lines', name='Option Price'))
+
+        fig_volatility.update_layout(title=f"Preço da {option_type.upper()} em Função da Volatilidade - {asset}",
+                          xaxis_title="Volatility",
+                          yaxis_title="Option Price",
+                          template="plotly_dark")
+
+        st.plotly_chart(fig_volatility)
 
 
 
