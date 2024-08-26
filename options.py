@@ -677,6 +677,10 @@ def mercado():
                                                  close=data_filtrado['Close'],
                                                  increasing_line_color='green',
                                                  decreasing_line_color='red')])
+            
+            # Adiciona a linha da média móvel
+            fig.add_trace(go.Scatter(x=data_filtrado.index, y=data_filtrado['Close'].rolling(window=20).mean(), mode='lines', name='Média Móvel', line=dict(color='orange')))
+
             fig.add_trace(go.Scatter(x=data_filtrado.index, y=data_filtrado['Bollinger High'], mode='lines', name='Bollinger High'))
             fig.add_trace(go.Scatter(x=data_filtrado.index, y=data_filtrado['Bollinger Low'], mode='lines', name='Bollinger Low'))
 
@@ -694,6 +698,7 @@ def mercado():
             fig.add_trace(go.Scatter(x=entry_points.index, y=entry_points['Close'], mode='markers', marker=dict(color='blue', symbol='x', size=10), name='Pontos de Entrada'))
             fig.update_layout(title='Bandas de Bollinger', xaxis_title='Data', yaxis_title='Preço de Fechamento')
             st.plotly_chart(fig)
+
 
         elif indicador_selecionado == "MACD":
             data_filtrado = calcular_MACD(data_filtrado)
