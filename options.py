@@ -1417,7 +1417,7 @@ def login():
     st.title("Login")
     
     # Exibindo a imagem da IBEA
-    st.image("ibea_logo.png", use_column_width=True)
+    st.image("ibea.png", use_column_width=True)
     
     # Campos de login e senha
     st.text_input("Login", key="username")
