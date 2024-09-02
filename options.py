@@ -549,7 +549,7 @@ def calcular_RSI(data, window=14):
 def mercado():
     st.title("Mercado")
 
-    ativo = st.selectbox("Selecione o ativo", ["SBN24.NYB", "SBH25.NYB", "USDBRL=X", "SB=F"])
+    ativo = st.selectbox("Selecione o ativo", ["SBV24.NYB", "SBH25.NYB", "USDBRL=X", "SB=F"])
 
     data = yf.download(ativo, start="2014-01-01", end="2024-12-12")
 
