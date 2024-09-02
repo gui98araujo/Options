@@ -1444,6 +1444,7 @@ def main():
         page = st.sidebar.radio("Selecione uma opção", ["Introdução", "ATR", "Metas", "Regressão Dólar", "Simulação de Opções", "Monte Carlo", "Mercado", "Risco", "Breakeven", "Black Scholes", "Cenários", "VaR"])
 
         if page == "Introdução":
+            st.image("ibea.png", use_column_width=True)
             st.title("Gestão de Risco e Derivativos")
             st.write("""
                 A indústria açucareira é um dos pilares da economia em muitos países, mas está sujeita a flutuações significativas nos preços do açúcar e do dólar, entre outros fatores. Nesse cenário, a gestão de riscos desempenha um papel fundamental para garantir a estabilidade e a lucratividade das operações.
@@ -1462,6 +1463,7 @@ def main():
 
         # As outras funções do menu continuam aqui...
         elif page == "Metas":
+            st.image("ibea.png", use_column_width=True)
             st.title("Metas")
             st.write("Selecione a meta desejada:")
             meta = st.slider("Meta:", min_value=2400, max_value=2800, value=2600, step=10)
