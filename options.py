@@ -1463,7 +1463,7 @@ def main():
 
         # As outras funções do menu continuam aqui...
         elif page == "Metas":
-            st.image("ibea.png", use_column_width=True)
+            st.image("./ibea.png", width=500)
             st.title("Metas")
             st.write("Selecione a meta desejada:")
             meta = st.slider("Meta:", min_value=2400, max_value=2800, value=2600, step=10)
@@ -1473,24 +1473,34 @@ def main():
                 mtm_data = calcular_mtm(meta)
                 st.line_chart(mtm_data.set_index('Date'), use_container_width=True)
         elif page == "Simulação de Opções":
+            st.image("./ibea.png", width=500)
             simulacao_opcoes()
         elif page == "ATR":
+            st.image("./ibea.png", width=500)
             atr()
         elif page == "Regressão Dólar":
+            st.image("./ibea.png", width=500)
             regressaoDolar()   
         elif page == "Monte Carlo":
+            st.image("./ibea.png", width=500)
             monte_carlo()
         elif page == "Mercado":
+            st.image("./ibea.png", width=500)
             mercado()
         elif page == "Risco":
+            st.image("./ibea.png", width=500)
             risco()
         elif page == "Breakeven":
+            st.image("./ibea.png", width=500)
             breakeven()
         elif page == "Cenários":
+            st.image("./ibea.png", width=500)
             cenarios()
         elif page == "VaR":
+            st.image("./ibea.png", width=500)
             VaR()
         elif page == "Black Scholes":
+            st.image("./ibea.png", width=500)
             blackscholes()
 
 if __name__ == "__main__":
