@@ -1413,9 +1413,13 @@ def blackscholes():
 
 
 
-# Função de autenticação
 def login():
     st.title("Login")
+    
+    # Exibindo a imagem da IBEA
+    st.image("ibea_logo.png", use_column_width=True)
+    
+    # Campos de login e senha
     st.text_input("Login", key="username")
     st.text_input("Senha", type="password", key="password")
     
@@ -1486,5 +1490,6 @@ def main():
             VaR()
         elif page == "Black Scholes":
             blackscholes()
+
 if __name__ == "__main__":
     main()
