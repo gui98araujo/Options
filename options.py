@@ -1414,10 +1414,10 @@ def blackscholes():
 
 
 def login():
-    st.title("Login")
-    
+
     # Exibindo a imagem da IBEA
     st.image("ibea.png", use_column_width=True)
+    st.title("Login")
     
     # Campos de login e senha
     st.text_input("Login", key="username")
