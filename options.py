@@ -873,7 +873,7 @@ def monte_carlo():
     desvio_padrao_retornos_diarios = data['Daily Return'].std()
 
     # Selecionar a data para simulação
-    data_simulacao = st.date_input("Selecione a data para simulação", value=pd.to_datetime('2024-08-30'))
+    data_simulacao = st.date_input("Selecione a data para simulação", value=pd.to_datetime('2025-08-30'))
 
     # Calcular o número de dias úteis até a data de simulação
     hoje = pd.to_datetime('today').date()
@@ -1376,7 +1376,7 @@ def blackscholes():
     # Parâmetros iniciais
     assets = {
         'SBV24.NYB': datetime(2024, 9, 16),
-        'SBH25.NYB': datetime(2025, 2, 16)
+        'SBH25.NYB': datetime(2025, 2, 16),
     }
 
     risk_free_rate = 0.053
