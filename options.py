@@ -502,6 +502,8 @@ import pandas as pd
 import numpy as np
 import streamlit as st
 import plotly.graph_objects as go
+import smtplib
+from email.mime.text import MIMEText
 
 def calcular_MACD(data, short_window=12, long_window=26, signal_window=9):
     short_ema = data['Close'].ewm(span=short_window, min_periods=1, adjust=False).mean()
@@ -545,6 +547,38 @@ def calcular_RSI(data, window=14):
     rs = ganho / perda
     rsi = 100 - (100 / (1 + rs))
     return rsi
+
+
+def enviar_alerta(email, ativo, cci_status, rsi_status, estocastico_status, bb_status):
+    # Configurar servidor SMTP
+    smtp_server = "smtp.seu_email.com"
+    smtp_port = 587
+    sender_email = "seu_email@example.com"
+    sender_password = "sua_senha"
+
+    # Conteúdo do e-mail
+    message = f"""
+    Alerta para o ativo {ativo}:
+
+    CCI: {cci_status}
+    RSI: {rsi_status}
+    Estocástico: {estocastico_status}
+    Bandas de Bollinger: {bb_status}
+    """
+    msg = MIMEText(message)
+    msg['Subject'] = f"Alerta de Mercado - {ativo}"
+    msg['From'] = sender_email
+    msg['To'] = email
+
+    # Enviar e-mail
+    try:
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls()
+            server.login(sender_email, sender_password)
+            server.sendmail(sender_email, email, msg.as_string())
+        st.success(f"Alerta enviado para {email}")
+    except Exception as e:
+        st.error(f"Erro ao enviar o e-mail: {e}")
 
 def mercado():
     st.title("Mercado")
@@ -759,6 +793,41 @@ def mercado():
         col3.metric("Média de Todos os Candles (Fechamento)", f"{media_fechamentos:.2f}", "")
 
         st.write("")
+
+
+        # Botão para gerar alerta
+        st.write("")
+        gerar_alerta = st.checkbox("Gerar Alerta")
+        if gerar_alerta:
+            email = st.text_input("Digite seu e-mail para receber o alerta")
+            if email:
+                cci_status = "Normal"
+                rsi_status = "Normal"
+                estocastico_status = "Normal"
+                bb_status = "Normal"
+
+                if data_filtrado['CCI'].iloc[-1] > sobrecompra:
+                    cci_status = "Sobrecomprado"
+                elif data_filtrado['CCI'].iloc[-1] < -100:
+                    cci_status = "Sobrevendido"
+
+                if data_filtrado['RSI'].iloc[-1] > 70:
+                    rsi_status = "Sobrecomprado"
+                elif data_filtrado['RSI'].iloc[-1] < 30:
+                    rsi_status = "Sobrevendido"
+
+                if data_filtrado['Estocástico'].iloc[-1] > 80:
+                    estocastico_status = "Sobrecomprado"
+                elif data_filtrado['Estocástico'].iloc[-1] < 20:
+                    estocastico_status = "Sobrevendido"
+
+                if data_filtrado['Close'].iloc[-1] > data_filtrado['Bollinger High'].iloc[-1]:
+                    bb_status = "Sobrecomprado"
+                elif data_filtrado['Close'].iloc[-1] < data_filtrado['Bollinger Low'].iloc[-1]:
+                    bb_status = "Sobrevendido"
+
+                enviar_alerta(email, ativo, cci_status, rsi_status, estocastico_status, bb_status)
+
 
 
 
