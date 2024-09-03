@@ -551,10 +551,10 @@ def calcular_RSI(data, window=14):
 
 def enviar_alerta(email, ativo, cci_status, rsi_status, estocastico_status, bb_status):
     # Configurar servidor SMTP
-    smtp_server = "smtp.seu_email.com"
+    smtp_server = "smtp.gmail.com"
     smtp_port = 587
-    sender_email = "seu_email@example.com"
-    sender_password = "sua_senha"
+    sender_email = "guilherme.araujo.0798@gmail.com"
+    sender_password = "Khan1982$"
 
     # Conteúdo do e-mail
     message = f"""
