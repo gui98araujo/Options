@@ -1482,6 +1482,48 @@ def blackscholes():
 
 
 
+import requests
+from bs4 import BeautifulSoup
+
+# Função para obter notícias
+def get_news(ativo, data):
+    # Aqui vai a lógica de scraping das notícias. Isso é apenas um exemplo fictício.
+    noticias = [
+        {"titulo": "Dólar sobe após dados de inflação nos EUA", "url": "https://www.investing.com/news/forex-news", "sentimento": "altista", "volatilidade": 3},
+        {"titulo": "Açúcar tem leve recuo após negociações no mercado internacional", "url": "https://www.investing.com/news/commodities-news", "sentimento": "baixista", "volatilidade": 2},
+        {"titulo": "Etanol se mantém estável com pouca demanda", "url": "https://www.investing.com/news/commodities-news", "sentimento": "neutro", "volatilidade": 1},
+    ]
+    # Filtrar notícias com base no ativo e data (simplificado para o exemplo)
+    return noticias
+
+# Função para classificar a volatilidade com estrelas
+def mostrar_estrelas(volatilidade):
+    return "★" * volatilidade + "☆" * (3 - volatilidade)
+
+# Página de Notícias
+def noticias():
+    st.image("./ibea.png", width=500)
+    st.title("Notícias do Mercado")
+    
+    ativo = st.selectbox("Selecione o ativo:", ["Açúcar", "Etanol", "Câmbio (USDBRL=X)"])
+    data = st.date_input("Selecione a data:", value=date.today())
+    
+    if st.button("Gerar Notícias"):
+        st.write(f"Notícias para {ativo} em {data}:")
+        
+        noticias_filtradas = get_news(ativo, data)
+        
+        for noticia in noticias_filtradas:
+            st.image("placeholder-image.png", width=100)  # Placeholder para imagem da manchete
+            st.markdown(f"[{noticia['titulo']}]({noticia['url']})")
+            st.write(f"Sentimento: **{noticia['sentimento'].capitalize()}**")
+            st.write(f"Volatilidade: {mostrar_estrelas(noticia['volatilidade'])}")
+
+
+
+
+
+
 def login():
 
     # Exibindo a imagem da IBEA
@@ -1510,7 +1552,7 @@ def main():
         st.set_page_config(page_title="Gestão de Risco na Usina de Açúcar", page_icon="📈", layout="wide")
         
         st.sidebar.title("Menu")
-        page = st.sidebar.radio("Selecione uma opção", ["Introdução", "ATR", "Metas", "Regressão Dólar", "Simulação de Opções", "Monte Carlo", "Mercado", "Risco", "Breakeven", "Black Scholes", "Cenários", "VaR"])
+        page = st.sidebar.radio("Selecione uma opção", ["Introdução", "ATR", "Metas", "Regressão Dólar", "Simulação de Opções", "Monte Carlo", "Mercado", "Risco", "Breakeven", "Black Scholes", "Cenários", "VaR","Notícias"])
 
         if page == "Introdução":
             st.image("./ibea.png", width=500)
@@ -1571,6 +1613,9 @@ def main():
         elif page == "Black Scholes":
             st.image("./ibea.png", width=500)
             blackscholes()
+
+        if page == "Notícias":
+            noticias()
 
 if __name__ == "__main__":
     main()
