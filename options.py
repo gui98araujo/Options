@@ -1507,7 +1507,7 @@ def noticias():
     st.title("Notícias do Mercado")
     
     ativo = st.selectbox("Selecione o ativo:", ["Açúcar", "Etanol", "Câmbio (USDBRL=X)"])
-    data = st.date_input("Selecione a data:", value=date.today())  # Corrige o erro importando 'date'
+    data = st.date_input("Selecione a data:", value=date.today())
     
     if st.button("Gerar Notícias"):
         st.write(f"Notícias para {ativo} em {data}:")
@@ -1515,10 +1515,10 @@ def noticias():
         noticias_filtradas = get_news(ativo, data)
         
         for noticia in noticias_filtradas:
-            st.image("placeholder-image.png", width=100)  # Placeholder para imagem da manchete
-            st.markdown(f"[{noticia['titulo']}]({noticia['url']})")
-            st.write(f"Sentimento: **{noticia['sentimento'].capitalize()}**")
-            st.write(f"Volatilidade: {mostrar_estrelas(noticia['volatilidade'])}")
+            st.markdown(f"[{noticia['titulo']}]({noticia['url']})")  # Exibe o título da notícia com link
+            st.write(f"Sentimento: **{noticia['sentimento'].capitalize()}**")  # Exibe se é altista/baixista
+            st.write(f"Volatilidade: {mostrar_estrelas(noticia['volatilidade'])}")  # Exibe estrelas de volatilidade
+
 
 
 
