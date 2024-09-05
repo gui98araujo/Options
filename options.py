@@ -1500,13 +1500,14 @@ def get_news(ativo, data):
 def mostrar_estrelas(volatilidade):
     return "★" * volatilidade + "☆" * (3 - volatilidade)
 
-# Página de Notícias
+from datetime import date  # Adicione essa importação
+
 def noticias():
     st.image("./ibea.png", width=500)
     st.title("Notícias do Mercado")
     
     ativo = st.selectbox("Selecione o ativo:", ["Açúcar", "Etanol", "Câmbio (USDBRL=X)"])
-    data = st.date_input("Selecione a data:", value=date.today())
+    data = st.date_input("Selecione a data:", value=date.today())  # Corrige o erro importando 'date'
     
     if st.button("Gerar Notícias"):
         st.write(f"Notícias para {ativo} em {data}:")
