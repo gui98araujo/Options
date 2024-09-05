@@ -1512,9 +1512,29 @@ def noticias():
     if st.button("Gerar Notícias"):
         st.write(f"Notícias para {ativo} em {data}:")
         
-        noticias_filtradas = get_news(ativo, data)
+        noticias_filtradas = []
         
+        # Exemplo de notícias para o ativo "Câmbio (USDBRL=X)"
+        if ativo == "Câmbio (USDBRL=X)":
+            noticias_filtradas = [
+                {
+                    'titulo': 'Juros mais altos não atrapalham história dos mercados acionários no Brasil - HSBC',
+                    'url': 'https://br.investing.com/news/stock-market-news/juros-mais-altos-nao-atrapalham-historia-dos-mercados-acionarios-no-brasil--hsbc-1333230',
+                    'imagem': 'noticia1.png',
+                    'sentimento': 'baixista',
+                    'volatilidade': 1  # Baixa volatilidade
+                },
+                {
+                    'titulo': 'Dólar tem queda forte e fecha abaixo de R$5,60 após dados fracos dos EUA',
+                    'url': 'https://br.investing.com/news/forex-news/dolar-a-vista-fecha-em-baixa-de-119-a-r55726-na-venda-1333337',
+                    'imagem': 'noticia2.png',
+                    'sentimento': 'baixista',
+                    'volatilidade': 3  # Alta volatilidade
+                }
+            ]
+
         for noticia in noticias_filtradas:
+            st.image(noticia['imagem'], width=100)  # Mostra a imagem associada à notícia
             st.markdown(f"[{noticia['titulo']}]({noticia['url']})")  # Exibe o título da notícia com link
             st.write(f"Sentimento: **{noticia['sentimento'].capitalize()}**")  # Exibe se é altista/baixista
             st.write(f"Volatilidade: {mostrar_estrelas(noticia['volatilidade'])}")  # Exibe estrelas de volatilidade
