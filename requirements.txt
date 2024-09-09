@@ -13,3 +13,4 @@ xgboost
 openpyxl
 statsmodels
 xlrd
+xlsxwriter
