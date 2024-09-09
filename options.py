@@ -638,6 +638,21 @@ def mercado():
             fig.update_layout(title='Volatilidade EWMA', xaxis_title='Data', yaxis_title='Volatilidade')
             st.plotly_chart(fig)
 
+            # Criar arquivo Excel
+            excel_buffer = io.BytesIO()
+            with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
+                data_ewma = data_filtrado[['Close', 'Abs Daily Returns', 'EWMA Volatility']].reset_index()
+                data_ewma.to_excel(writer, sheet_name='EWMA', index=False)
+
+            excel_buffer.seek(0)
+            st.download_button(
+                label="Baixar Arquivo Excel",
+                data=excel_buffer,
+                file_name="dados_ewma.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+
+
         elif indicador_selecionado == "CCI":
             data_filtrado['CCI'] = calcular_CCI(data_filtrado)
             data_filtrado['Entry Points'] = (data_filtrado['CCI'] > sobrecompra) & \
