@@ -14,6 +14,7 @@ from scipy.stats import norm
 from plotly.subplots import make_subplots
 import streamlit as st
 import yfinance as yf
+import io  
 import numpy as np
 import pandas as pd
 import plotly.express as px
