@@ -137,43 +137,29 @@ def regressaoDolar():
         st.plotly_chart(fig)
 
 # Gráfico com valor predito, valor real, e faixas de erro
+# Gráfico com valor predito, valor predito + RMSE, valor predito - RMSE e valor real
 fig = go.Figure()
 
-# Linha de Valor Real
+# Linha do valor real
 fig.add_trace(go.Scatter(x=df_transformed.index, y=y, mode='lines', name='Valor Real'))
 
-# Linha de Valor Predito
+# Linha do valor predito
 fig.add_trace(go.Scatter(x=df_transformed.index, y=y_pred, mode='lines', name='Valor Predito'))
 
-# Linha de Valor Predito + RMSE
+# Linha do valor predito + RMSE
 fig.add_trace(go.Scatter(x=df_transformed.index, y=y_pred + np.sqrt(mse), mode='lines', name='Valor Predito + RMSE'))
 
-# Linha de Valor Predito - RMSE
+# Linha do valor predito - RMSE
 fig.add_trace(go.Scatter(x=df_transformed.index, y=y_pred - np.sqrt(mse), mode='lines', name='Valor Predito - RMSE'))
 
-# Atualizando layout do gráfico
+# Configurações do layout
 fig.update_layout(
-    title='Valor Real vs Valor Predito com Faixas de Erro',
+    title='Valor Real vs Valor Predito com RMSE',
     xaxis_title='Data',
-    yaxis_title='Taxa de Câmbio',
-    showlegend=True
+    yaxis_title='Taxa de Câmbio'
 )
 
-# Adicionar rótulos de dados nas três linhas
-for trace_name, trace_y in zip(
-        ['Valor Predito', 'Valor Predito + RMSE', 'Valor Predito - RMSE'], 
-        [y_pred, y_pred + np.sqrt(mse), y_pred - np.sqrt(mse)]):
-    fig.add_trace(go.Scatter(
-        x=df_transformed.index,
-        y=trace_y,
-        mode='markers+text',
-        text=[f'{val:.2f}' for val in trace_y],
-        textposition='top right',
-        name=f'{trace_name} - Dados',
-        showlegend=False  # Não mostrar no legend
-    ))
-
-# Exibir o gráfico no Streamlit
+# Exibir o gráfico
 st.plotly_chart(fig)
 
 
