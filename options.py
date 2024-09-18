@@ -136,14 +136,45 @@ def regressaoDolar():
         fig.update_layout(height=400, width=1200, title_text="Gráficos de Dispersão: Taxa de Câmbio vs Variáveis Remanescentes")
         st.plotly_chart(fig)
 
-        # Gráfico com valor predito e valor real
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(x=df_transformed.index, y=y, mode='lines', name='Valor Real'))
-        fig.add_trace(go.Scatter(x=df_transformed.index, y=y_pred, mode='lines', name='Valor Predito'))
+# Gráfico com valor predito, valor real, e faixas de erro
+fig = go.Figure()
 
-        fig.update_layout(title='Valor Real vs Valor Predito', xaxis_title='Data', yaxis_title='Taxa de Câmbio')
-        st.plotly_chart(fig)
+# Linha de Valor Real
+fig.add_trace(go.Scatter(x=df_transformed.index, y=y, mode='lines', name='Valor Real'))
 
+# Linha de Valor Predito
+fig.add_trace(go.Scatter(x=df_transformed.index, y=y_pred, mode='lines', name='Valor Predito'))
+
+# Linha de Valor Predito + RMSE
+fig.add_trace(go.Scatter(x=df_transformed.index, y=y_pred + np.sqrt(mse), mode='lines', name='Valor Predito + RMSE'))
+
+# Linha de Valor Predito - RMSE
+fig.add_trace(go.Scatter(x=df_transformed.index, y=y_pred - np.sqrt(mse), mode='lines', name='Valor Predito - RMSE'))
+
+# Atualizando layout do gráfico
+fig.update_layout(
+    title='Valor Real vs Valor Predito com Faixas de Erro',
+    xaxis_title='Data',
+    yaxis_title='Taxa de Câmbio',
+    showlegend=True
+)
+
+# Adicionar rótulos de dados nas três linhas
+for trace_name, trace_y in zip(
+        ['Valor Predito', 'Valor Predito + RMSE', 'Valor Predito - RMSE'], 
+        [y_pred, y_pred + np.sqrt(mse), y_pred - np.sqrt(mse)]):
+    fig.add_trace(go.Scatter(
+        x=df_transformed.index,
+        y=trace_y,
+        mode='markers+text',
+        text=[f'{val:.2f}' for val in trace_y],
+        textposition='top right',
+        name=f'{trace_name} - Dados',
+        showlegend=False  # Não mostrar no legend
+    ))
+
+# Exibir o gráfico no Streamlit
+st.plotly_chart(fig)
 
 
 
