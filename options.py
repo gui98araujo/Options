@@ -74,9 +74,29 @@ def prever_taxa_cambio(model, juros_br, juros_eua, prod_ind_br, prod_ind_eua, of
     taxa_cambio_prevista = model.predict(X_novo)
     return taxa_cambio_prevista[0]
 
+# Função para projetar valores futuros até dezembro de 2024
+def projetar_valores_ate_2024(model, df_transformed, juros_br_proj, juros_eua_proj, prod_ind_br_proj, prod_ind_eua_proj, oferta_moeda_br_proj, oferta_moeda_eua_proj, mse):
+    import pandas as pd
+
+    # Projeção até dez/2024
+    future_dates = pd.date_range(start=df_transformed.index[-1], end='2024-12-31', freq='M')
+    future_preds = []
+    future_upper_band = []
+    future_lower_band = []
+
+    for _ in future_dates:
+        taxa_cambio_prevista = prever_taxa_cambio(model, juros_br_proj, juros_eua_proj, prod_ind_br_proj, prod_ind_eua_proj, oferta_moeda_br_proj, oferta_moeda_eua_proj)
+        future_preds.append(taxa_cambio_prevista)
+        future_upper_band.append(taxa_cambio_prevista + mse ** 0.5)  # RMSE como desvio padrão
+        future_lower_band.append(taxa_cambio_prevista - mse ** 0.5)
+
+    future_df = pd.DataFrame({'Data': future_dates, 'Taxa Predita': future_preds, 'Upper Band': future_upper_band, 'Lower Band': future_lower_band})
+    future_df.set_index('Data', inplace=True)
+    
+    return future_df
+
 # Função principal
 def regressaoDolar():
-
     st.title("Previsão da Taxa de Câmbio")
     st.write("Insira as premissas abaixo e clique em 'Gerar Regressão' para prever a taxa de câmbio.")
 
@@ -110,7 +130,6 @@ def regressaoDolar():
         p_values = model_sm.pvalues
         feature_importance = np.abs(coefficients)
 
-
         taxa_cambio_prevista = prever_taxa_cambio(model, juros_br_proj, juros_eua_proj, prod_ind_br_proj, prod_ind_eua_proj, oferta_moeda_br_proj, oferta_moeda_eua_proj)
         st.write(f'Taxa de câmbio prevista: {taxa_cambio_prevista:.4f}')
 
@@ -142,6 +161,17 @@ def regressaoDolar():
         fig.add_trace(go.Scatter(x=df_transformed.index, y=y_pred, mode='lines', name='Valor Predito'))
 
         fig.update_layout(title='Valor Real vs Valor Predito', xaxis_title='Data', yaxis_title='Taxa de Câmbio')
+        st.plotly_chart(fig)
+
+        # Projeção até dezembro de 2024
+        future_df = projetar_valores_ate_2024(model, df_transformed, juros_br_proj, juros_eua_proj, prod_ind_br_proj, prod_ind_eua_proj, oferta_moeda_br_proj, oferta_moeda_eua_proj, mse)
+
+        # Adicionando as três linhas de projeção ao gráfico
+        fig.add_trace(go.Scatter(x=future_df.index, y=future_df['Taxa Predita'], mode='lines', name='Valor Predito (Futuro)'))
+        fig.add_trace(go.Scatter(x=future_df.index, y=future_df['Upper Band'], mode='lines', name='Valor Predito + RMSE', line=dict(dash='dash')))
+        fig.add_trace(go.Scatter(x=future_df.index, y=future_df['Lower Band'], mode='lines', name='Valor Predito - RMSE', line=dict(dash='dash')))
+
+        fig.update_layout(title='Valor Real vs Valor Predito com Projeções até Dez/2024', xaxis_title='Data', yaxis_title='Taxa de Câmbio')
         st.plotly_chart(fig)
 
 
