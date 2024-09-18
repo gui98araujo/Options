@@ -145,27 +145,25 @@ def regressaoDolar():
         fig.update_layout(height=400, width=1200, title_text="Gráficos de Dispersão: Taxa de Câmbio vs Variáveis Remanescentes")
         st.plotly_chart(fig)
 
-        # Backtest e simulação para dezembro de 2024
+        # Gráfico com valor predito e valor real
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=df_transformed.index, y=y, mode='lines', name='Valor Real'))
+        fig.add_trace(go.Scatter(x=df_transformed.index, y=y_pred, mode='lines', name='Valor Predito'))
+
+        fig.update_layout(title='Valor Real vs Valor Predito', xaxis_title='Data', yaxis_title='Taxa de Câmbio')
+        st.plotly_chart(fig)
+
+        # Projeção até dezembro de 2024
         future_df = projetar_valores_ate_2024(model, df_transformed, juros_br_proj, juros_eua_proj, prod_ind_br_proj, prod_ind_eua_proj, oferta_moeda_br_proj, oferta_moeda_eua_proj, mse)
 
-        # Extraindo o valor previsto para dezembro de 2024
-        valor_predito_dez = future_df['Taxa Predita'].loc['2024-12-31']
-        valor_upper_band_dez = future_df['Upper Band'].loc['2024-12-31']
-        valor_lower_band_dez = future_df['Lower Band'].loc['2024-12-31']
-
-        # Gráfico com projeção e rótulos em dezembro de 2024
-        fig.add_trace(go.Scatter(x=future_df.index, y=future_df['Taxa Predita'], mode='lines+text', name='Valor Predito (Futuro)',
-                                 text=[f"{valor_predito_dez:.4f}" if i == len(future_df) - 1 else "" for i in range(len(future_df))],
-                                 textposition='top center'))
-        fig.add_trace(go.Scatter(x=future_df.index, y=future_df['Upper Band'], mode='lines+text', name='Valor Predito + RMSE', line=dict(dash='dash'),
-                                 text=[f"{valor_upper_band_dez:.4f}" if i == len(future_df) - 1 else "" for i in range(len(future_df))],
-                                 textposition='top center'))
-        fig.add_trace(go.Scatter(x=future_df.index, y=future_df['Lower Band'], mode='lines+text', name='Valor Predito - RMSE', line=dict(dash='dash'),
-                                 text=[f"{valor_lower_band_dez:.4f}" if i == len(future_df) - 1 else "" for i in range(len(future_df))],
-                                 textposition='bottom center'))
+        # Adicionando as três linhas de projeção ao gráfico
+        fig.add_trace(go.Scatter(x=future_df.index, y=future_df['Taxa Predita'], mode='lines', name='Valor Predito (Futuro)'))
+        fig.add_trace(go.Scatter(x=future_df.index, y=future_df['Upper Band'], mode='lines', name='Valor Predito + RMSE', line=dict(dash='dash')))
+        fig.add_trace(go.Scatter(x=future_df.index, y=future_df['Lower Band'], mode='lines', name='Valor Predito - RMSE', line=dict(dash='dash')))
 
         fig.update_layout(title='Valor Real vs Valor Predito com Projeções até Dez/2024', xaxis_title='Data', yaxis_title='Taxa de Câmbio')
         st.plotly_chart(fig)
+
 
 
 
