@@ -555,7 +555,7 @@ def enviar_alerta(email, ativo, cci_status, rsi_status, estocastico_status, bb_s
     smtp_server = "smtp.gmail.com"
     smtp_port = 587
     sender_email = "guilherme.araujo.0798@gmail.com"
-    sender_password = "Khan1982$"
+    sender_password = "12345678"
 
     # Conteúdo do e-mail
     message = f"""
