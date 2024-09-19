@@ -1550,6 +1550,75 @@ def noticias():
 
 
 
+
+import streamlit as st
+import yfinance as yf
+import pandas as pd
+import plotly.express as px
+
+# Função para obter dados históricos de acordo com o símbolo selecionado
+def get_historical_data(symbol, start_date):
+    data = yf.download(symbol, start=start_date, end="2099-01-01")
+    data['Daily Returns'] = data['Adj Close'].pct_change()
+    data['EWMA Volatility'] = data['Daily Returns'].ewm(span=20).std()
+    data['Abs Daily Returns'] = data['Daily Returns'].abs()
+    data.dropna(inplace=True)
+    return data
+
+# Função para salvar o DataFrame em um arquivo Excel
+def save_to_excel(data, filename):
+    data.to_excel(filename, index=True)
+
+# Função principal do aplicativo Streamlit
+def volatilidade():
+    # Configuração da interface do usuário
+    st.title("Volatilidade de Preços - Açúcar e Dólar")
+
+    # Seleção da variável a ser estudada
+    variable = st.selectbox("Escolha a variável para estudar:", ["Açúcar", "Dólar"])
+
+    # Seleção da data de início
+    start_date = st.date_input("Selecione a data de início:", value=pd.to_datetime("2013-01-01"))
+
+    # Definindo o símbolo com base na variável escolhida
+    symbol = "SB=F" if variable == "Açúcar" else "USDBRL=X"
+
+    # Botão para iniciar a simulação
+    if st.button("Simular"):
+        # Obtenção dos dados históricos
+        data = get_historical_data(symbol, start_date.strftime('%Y-%m-%d'))
+
+        # Verificação se há dados para exibir
+        if not data.empty:
+            # Gráfico interativo com Plotly
+            fig = px.line(data, x=data.index, y='EWMA Volatility', title=f'Volatilidade EWMA - {variable}')
+            st.plotly_chart(fig)
+
+            # Botão para baixar o arquivo Excel
+            excel_filename = f'{variable.lower()}_bi.xlsx'
+            save_to_excel(data, excel_filename)
+
+            # Botão de download
+            with open(excel_filename, "rb") as file:
+                st.download_button(
+                    label="Baixar Excel",
+                    data=file,
+                    file_name=excel_filename,
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
+        else:
+            st.error("Não há dados disponíveis para a data selecionada. Por favor, tente outra data.")
+
+
+
+
+
+
+
+
+
+
+
 def login():
 
     # Exibindo a imagem da IBEA
@@ -1578,7 +1647,7 @@ def main():
         st.set_page_config(page_title="Gestão de Risco na Usina de Açúcar", page_icon="📈", layout="wide")
         
         st.sidebar.title("Menu")
-        page = st.sidebar.radio("Selecione uma opção", ["Introdução", "ATR", "Metas", "Regressão Dólar", "Simulação de Opções", "Monte Carlo", "Mercado", "Risco", "Breakeven", "Black Scholes", "Cenários", "VaR","Notícias"])
+        page = st.sidebar.radio("Selecione uma opção", ["Introdução", "ATR", "Metas", "Regressão Dólar", "Volatilidade","Simulação de Opções", "Monte Carlo", "Mercado", "Risco", "Breakeven", "Black Scholes", "Cenários", "VaR","Notícias"])
 
         if page == "Introdução":
             st.image("./ibea.png", width=500)
@@ -1639,6 +1708,9 @@ def main():
         elif page == "Black Scholes":
             st.image("./ibea.png", width=500)
             blackscholes()
+        elif page == "Volatilidade":
+            st.image("./ibea.png", width=500)
+            volatilidade()
 
         if page == "Notícias":
             noticias()
