@@ -1687,6 +1687,9 @@ def main():
         elif page == "Regressão Dólar":
             st.image("./ibea.png", width=500)
             regressaoDolar()   
+        elif page == "Volatilidade":
+            st.image("./ibea.png", width=500)
+            volatilidade()
         elif page == "Monte Carlo":
             st.image("./ibea.png", width=500)
             monte_carlo()
@@ -1708,9 +1711,6 @@ def main():
         elif page == "Black Scholes":
             st.image("./ibea.png", width=500)
             blackscholes()
-        elif page == "Volatilidade":
-            st.image("./ibea.png", width=500)
-            volatilidade()
 
         if page == "Notícias":
             noticias()
