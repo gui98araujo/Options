@@ -1653,9 +1653,6 @@ def LessLoss():
     # Calculando o número de dias entre as datas
     num_days = (end_date - start_date).days
 
-    # Calculando a quantidade de leituras por dia para cada medidor
-    df['leituras_por_dia'] = df['count'] / num_days
-
     # Gerando clusters aleatórios com base nas probabilidades fornecidas
     probabilities = [0.50, 0.10, 0.05, 0.04, 0.10, 0.01, 0.10, 0.05, 0.05]
     clusters = np.random.choice(range(1,10), size=num_days*len(df), p=probabilities)
@@ -1672,6 +1669,10 @@ def LessLoss():
     }
     cluster_df = pd.DataFrame(cluster_data)
 
+    # Adicionando leituras diárias entre 40 e 60 para cada medidor
+    leituras_por_dia = np.random.randint(40, 61, size=(num_days * len(df)))
+    cluster_df['leituras_por_dia'] = leituras_por_dia
+
     # Configurando o Streamlit
     st.title("Análise de Leituras de Medidores")
 
@@ -1683,7 +1684,7 @@ def LessLoss():
     filtered_data = cluster_df[(cluster_df['serial_medidor'] == selected_medidor) & (cluster_df['date'] == pd.to_datetime(selected_date))]
 
     # Gerando o gráfico com Plotly
-    fig = px.scatter(filtered_data, x='date', y='cluster', title=f"Clusters de Leituras para o Medidor {selected_medidor} na Data {selected_date}")
+    fig = px.scatter(filtered_data, x='date', y='leituras_por_dia', title=f"Leituras Diárias para o Medidor {selected_medidor} na Data {selected_date}")
 
     # Exibindo o gráfico no Streamlit
     st.plotly_chart(fig)
