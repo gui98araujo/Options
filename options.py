@@ -1623,67 +1623,6 @@ def volatilidade():
 
 
 
-import streamlit as st
-import pandas as pd
-import numpy as np
-import plotly.express as px
-from datetime import datetime
-
-def LessLoss():
-    # Dados fornecidos
-    data = {
-        'serial_medidor': ['S802BB16000', 'S5M905144', 'S5M905135', 'S5P406844', 'S5N903813', 'S5U603749', 'S5LB14019', 
-                           'S5M905146', 'S5N903641', 'S5N905118', 'E31AAA19000', 'H805C216000', 'H8054516000', 
-                           'H8003192000', 'S5M904905', 'S5N903642', 'KA092016000', 'H8003392000', 'S5M905136', 
-                           'P3218019000', 'H8004092000', 'S5N903808', 'S5M905143', 'S5M905109', 'H8003292000', 
-                           'S5N903814', 'S5M810193', 'G22CN8000005', 'S5M905094', 'G22CN8000101', 'G22CN8000028', 
-                           'S5M905111', 'S5M810194'],
-        'count': [34497, 34178, 32099, 31917, 31661, 31413, 30464, 30403, 30027, 29823, 29766, 29713, 29693, 29605, 
-                  29584, 29382, 29358, 29146, 28593, 28256, 28223, 28091, 27917, 26769, 25984, 25470, 24139, 23383, 
-                  23346, 23045, 22622, 22484, 21140]
-    }
-
-    # Convertendo para DataFrame
-    df = pd.DataFrame(data)
-
-    # Datas de início e fim
-    start_date = datetime(2022, 12, 1, 16, 25, 33)
-    end_date = datetime(2024, 9, 2, 18, 32, 4)
-
-    # Calculando o número de dias entre as datas
-    num_days = (end_date - start_date).days
-
-    # Gerando clusters aleatórios com base nas probabilidades fornecidas
-    probabilities = [0.50, 0.10, 0.05, 0.04, 0.10, 0.01, 0.10, 0.05, 0.05]
-    clusters = np.random.choice(range(1,10), size=num_days*len(df), p=probabilities)
-
-    # Corrigindo o comprimento dos arrays para garantir que todos tenham o mesmo comprimento
-    date_range = pd.date_range(start=start_date.date(), end=end_date.date())
-    date_range_repeated = np.tile(date_range.values[:num_days], len(df))
-    serial_medidor_repeated = np.repeat(df['serial_medidor'], num_days)
-
-    cluster_data = {
-        "date": date_range_repeated,
-        "serial_medidor": serial_medidor_repeated,
-        "cluster": clusters
-    }
-    cluster_df = pd.DataFrame(cluster_data)
-
-    # Configurando o Streamlit
-    st.title("Análise de Leituras de Medidores")
-
-    # Filtro de seleção de medidor e data
-    selected_medidor = st.selectbox("Selecione o Medidor", df['serial_medidor'])
-    selected_date = st.date_input("Selecione a Data", value=start_date.date(), min_value=start_date.date(), max_value=end_date.date())
-
-    # Filtrando os dados com base na seleção do usuário
-    filtered_data = cluster_df[(cluster_df['serial_medidor'] == selected_medidor) & (cluster_df['date'] == pd.to_datetime(selected_date))]
-
-    # Gerando o gráfico com Plotly
-    fig = px.line(filtered_data, x='date', y='cluster', title=f"Clusters de Leituras para o Medidor {selected_medidor} na Data {selected_date}")
-
-    # Exibindo o gráfico no Streamlit
-    st.plotly_chart(fig)
 
 
 
@@ -1718,7 +1657,7 @@ def main():
         st.set_page_config(page_title="Gestão de Risco na Usina de Açúcar", page_icon="📈", layout="wide")
         
         st.sidebar.title("Menu")
-        page = st.sidebar.radio("Selecione uma opção", ["Introdução", "ATR", "Metas", "Regressão Dólar", "Volatilidade","Simulação de Opções", "Monte Carlo", "Mercado", "Risco", "Breakeven", "Black Scholes", "Cenários", "VaR","Notícias","Less Loss"])
+        page = st.sidebar.radio("Selecione uma opção", ["Introdução", "ATR", "Metas", "Regressão Dólar", "Volatilidade","Simulação de Opções", "Monte Carlo", "Mercado", "Risco", "Breakeven", "Black Scholes", "Cenários", "VaR","Notícias"])
 
         if page == "Introdução":
             st.image("./ibea.png", width=500)
@@ -1785,8 +1724,6 @@ def main():
 
         if page == "Notícias":
             noticias()
-        if page == "Less Loss":
-            LessLoss()
 
 if __name__ == "__main__":
     main()
