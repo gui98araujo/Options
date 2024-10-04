@@ -1760,7 +1760,7 @@ def main():
 
         elif page == "Notícias":
             noticias()
-        if page == "Less Loss"
+        if page == "Less Loss":
             lessloss()
 if __name__ == "__main__":
     main()
