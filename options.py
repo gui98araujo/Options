@@ -1619,6 +1619,42 @@ def volatilidade():
 
 
 
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+
+def lessloss():
+    # Função para carregar os dados
+    def load_data():
+        data = {
+            'id': [155697853, 155698536, 155699471],
+            'serial_medidor': ['S5M905135', 'S5M905135', 'S5M905135'],
+            'data_hora_leitura': ['2022-11-22 17:07:56', '2022-11-22 17:26:49', '2022-11-22 17:43:06'],
+            'leitura': [6728206.4, 6728220.4, 6728230.5],
+            'id_tipo_medidor': [1, 1, 1],
+            'Cluster': [3, 3, 4]
+        }
+        df = pd.DataFrame(data)
+        df['data_hora_leitura'] = pd.to_datetime(df['data_hora_leitura'])
+        return df
+
+    # Carregar os dados
+    df = load_data()
+
+    # Título do aplicativo
+    st.title('Análise de Medidores')
+
+    # Filtros
+    data_selecionada = st.selectbox('Selecione a data', df['data_hora_leitura'].dt.date.unique())
+    serial_selecionado = st.selectbox('Selecione o serial do medidor', df['serial_medidor'].unique())
+
+    # Filtrar os dados
+    df_filtrado = df[(df['data_hora_leitura'].dt.date == data_selecionada) & (df['serial_medidor'] == serial_selecionado)]
+
+    # Gráfico
+    fig = px.line(df_filtrado, x='data_hora_leitura', y='Cluster', title='Cluster do Medidor ao Longo do Dia')
+    st.plotly_chart(fig)
+
 
 
 
@@ -1657,7 +1693,7 @@ def main():
         st.set_page_config(page_title="Gestão de Risco na Usina de Açúcar", page_icon="📈", layout="wide")
         
         st.sidebar.title("Menu")
-        page = st.sidebar.radio("Selecione uma opção", ["Introdução", "ATR", "Metas", "Regressão Dólar", "Volatilidade","Simulação de Opções", "Monte Carlo", "Mercado", "Risco", "Breakeven", "Black Scholes", "Cenários", "VaR","Notícias"])
+        page = st.sidebar.radio("Selecione uma opção", ["Introdução", "ATR", "Metas", "Regressão Dólar", "Volatilidade","Simulação de Opções", "Monte Carlo", "Mercado", "Risco", "Breakeven", "Black Scholes", "Cenários", "VaR","Notícias","Less Loss" ])
 
         if page == "Introdução":
             st.image("./ibea.png", width=500)
@@ -1722,8 +1758,9 @@ def main():
             st.image("./ibea.png", width=500)
             blackscholes()
 
-        if page == "Notícias":
+        elif page == "Notícias":
             noticias()
-
+        if page == "Less Loss"
+            lessloss()
 if __name__ == "__main__":
     main()
