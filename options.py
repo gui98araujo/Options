@@ -1640,12 +1640,14 @@ def lessloss():
     data_selecionada = st.selectbox('Selecione a data', df['data_hora_leitura'].dt.date.unique())
     serial_selecionado = st.selectbox('Selecione o serial do medidor', df['serial_medidor'].unique())
 
-    # Filtrar os dados
-    df_filtrado = df[(df['data_hora_leitura'].dt.date == data_selecionada) & (df['serial_medidor'] == serial_selecionado)]
+    # Botão para visualizar o gráfico
+    if st.button('Visualizar'):
+        # Filtrar os dados
+        df_filtrado = df[(df['data_hora_leitura'].dt.date == data_selecionada) & (df['serial_medidor'] == serial_selecionado)]
 
-    # Gráfico
-    fig = px.line(df_filtrado, x='data_hora_leitura', y='Cluster', title='Cluster do Medidor ao Longo do Dia')
-    st.plotly_chart(fig)
+        # Gráfico
+        fig = px.line(df_filtrado, x='data_hora_leitura', y='Cluster', title='Cluster do Medidor ao Longo do Dia')
+        st.plotly_chart(fig)
 
 
 
