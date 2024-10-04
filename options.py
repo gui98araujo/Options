@@ -1623,13 +1623,14 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-def lessloss():
-    # Função para carregar os dados do arquivo Excel
-    def load_data():
-        df = pd.read_excel('df_final.xlsx')
-        df['data_hora_leitura'] = pd.to_datetime(df['data_hora_leitura'])
-        return df
+@st.cache_data
+def load_data():
+    # Carregar apenas as colunas necessárias
+    df = pd.read_excel('df_final.xlsx', usecols=['serial_medidor', 'data_hora_leitura', 'Cluster'])
+    df['data_hora_leitura'] = pd.to_datetime(df['data_hora_leitura'])
+    return df
 
+def lessloss():
     # Carregar os dados
     df = load_data()
 
@@ -1642,17 +1643,12 @@ def lessloss():
 
     # Botão para visualizar o gráfico
     if st.button('Visualizar'):
-        # Filtrar os dados
+        # Filtrar os dados antes de carregar no Streamlit
         df_filtrado = df[(df['data_hora_leitura'].dt.date == data_selecionada) & (df['serial_medidor'] == serial_selecionado)]
 
         # Gráfico
         fig = px.line(df_filtrado, x='data_hora_leitura', y='Cluster', title='Cluster do Medidor ao Longo do Dia')
         st.plotly_chart(fig)
-
-
-
-
-
 
 
 
