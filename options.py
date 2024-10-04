@@ -1624,17 +1624,9 @@ import pandas as pd
 import plotly.express as px
 
 def lessloss():
-    # Função para carregar os dados
+    # Função para carregar os dados do arquivo Excel
     def load_data():
-        data = {
-            'id': [155697853, 155698536, 155699471],
-            'serial_medidor': ['S5M905135', 'S5M905135', 'S5M905135'],
-            'data_hora_leitura': ['2022-11-22 17:07:56', '2022-11-22 17:26:49', '2022-11-22 17:43:06'],
-            'leitura': [6728206.4, 6728220.4, 6728230.5],
-            'id_tipo_medidor': [1, 1, 1],
-            'Cluster': [3, 3, 4]
-        }
-        df = pd.DataFrame(data)
+        df = pd.read_excel('df_final.xlsx')
         df['data_hora_leitura'] = pd.to_datetime(df['data_hora_leitura'])
         return df
 
@@ -1654,6 +1646,9 @@ def lessloss():
     # Gráfico
     fig = px.line(df_filtrado, x='data_hora_leitura', y='Cluster', title='Cluster do Medidor ao Longo do Dia')
     st.plotly_chart(fig)
+
+
+
 
 
 
