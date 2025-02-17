@@ -111,7 +111,7 @@ def train_neural_network(X_train, y_train, X_test, y_test):
     report = classification_report(y_test, y_pred)
     conf_matrix = confusion_matrix(y_test, y_pred)
     
-    _score = roc_auc_score(y_test, model.predict(X_test))
+    auc_score = roc_auc_score(y_test, model.predict(X_test))
     fpr, tpr, thresholds = roc_curve(y_test, model.predict(X_test))
     
     feature_importances = None
@@ -141,7 +141,7 @@ def display_results(report, conf_matrix, auc_score, fpr, tpr):
 def main():
     st.title("Simulação de Modelos de Machine Learning")
     
-    menu = ["Decision Tree", "Rede Neural", "CatBoost"]
+    menu = ["Decision Tree", "Rede Neural"]
     choice = st.sidebar.selectbox("Selecione o Modelo", menu)
     
     st.sidebar.write("Insira os dados do cliente:")
@@ -189,6 +189,12 @@ def main():
     if st.sidebar.button("Simular"):
         # Carregar e preprocessar os dados
         df_operacoes = pd.read_excel('base_operações.xlsx')
+        variaveis_selecionadas = ['[SRM] Código da operação', "Total em Atraso", 'Total do Contrato (Bruto)', "Inad30", "Inad60", "Inad90", "Dias Vencidos", "Total Pago", "Total Cobrado",
+                                  "Nota da Clínica", '[Capacidade] Idade', "[Capacidade] Situacao empregaticia", "[Capital] Endividamento", "[Serasa] Score",
+                                  "[Carater] Acoes_Judiciais_Cheques_Sustados_e_PIE", "[Carater] Percentual_de_divida_vencida_total", "[Carater] Quantidade_de_restricoes_comerciais",
+                                  "[Carater] Relevancia_das_restricoes_comerciais", "[Condicoes] Clinica", "[RELATORIO] Capacidade pontos", "[RELATORIO] Capital pontos", "[RELATORIO] Carater pontos",
+                                  "[RELATORIO] Condicoes pontos", "[RELATORIO] PMT", "Risco", "[Serasa] chance de pagar", "[Serasa] Falencias", "[SERASA] Qte acoes judiciais", "[Serasa] QTE CCF",
+                                  "[Serasa] qte Divida vencida", "[Serasa] Quantidade de protestos", "[VTM] Valor total", "renda utilizada", "Taxa de Juros"]
         df_operacoes_selecionadas = df_operacoes[variaveis_selecionadas]
         df_operacoes_selecionadas = df_operacoes_selecionadas.dropna(subset=['Total em Atraso'])
         
