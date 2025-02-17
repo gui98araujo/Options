@@ -20,6 +20,10 @@ pagina = st.sidebar.radio("Selecione o Modelo:", ["Tree Decision", "Rede Neural"
 
 # Inputs do usuário
 st.header("Insira os dados do cliente")
+                                                  
+# Inputs do usuário
+st.title(f"Simulação com {pagina}")
+
 nota_clinica = st.number_input("Nota da Clínica (0 a 10)", min_value=0, max_value=10, step=1)
 capacidade_idade = st.number_input("Idade", min_value=18, max_value=100, step=1)
 capital_endividamento = st.number_input("Endividamento", min_value=0.0, step=0.01)
