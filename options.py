@@ -21,11 +21,19 @@ def transformar_nota(nota):
 
 # Função para carregar dados (substitua pelo seu dataset)
 def carregar_dados():
-    df = pd.read_excel("base_operações.xlsx")
+    df = pd.read_csv("seu_dataset.csv")
     return df
 
 # Função para preprocessamento
 def preprocessar_dados(df):
+    # Definir a variável target
+    df['target'] = df.apply(
+        lambda row: 1 if row['Inad30'] > 0 or row['Inad60'] > 0 or row['Inad90'] > 0 or row['Dias Vencidos'] > 0 else 0,
+        axis=1
+    )
+    # Contar os valores da variável target
+    print(df['target'].value_counts())
+    
     X = df.drop("target", axis=1)
     y = df["target"]
     scaler = MinMaxScaler()
@@ -91,7 +99,7 @@ if st.button("Simular"):
     st.pyplot(fig)
     
     # Feature Importance
-    if pagina in ["Decision Tree"]:
+    if pagina == "Decision Tree":
         importance = modelo.feature_importances_
         st.text("Importância das Features:")
         fig, ax = plt.subplots()
