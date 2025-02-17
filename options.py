@@ -130,7 +130,7 @@ def train_neural_network(X_train, y_train, X_test, y_test):
     report = classification_report(y_test, y_pred)
     conf_matrix = confusion_matrix(y_test, y_pred)
     
-   _score = roc_auc_score(y_test, model.predict(X_test))
+    _score = roc_auc_score(y_test, model.predict(X_test))
     fpr, tpr, thresholds = roc_curve(y_test, model.predict(X_test))
     
     feature_importances = None
