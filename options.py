@@ -9,7 +9,6 @@ from sklearn.metrics import classification_report, confusion_matrix, roc_curve, 
 from sklearn.tree import DecisionTreeClassifier
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
-#from catboost import CatBoostClassifier
 
 # Função para converter Nota da Clínica
 def transformar_nota(nota):
@@ -20,7 +19,7 @@ def transformar_nota(nota):
     else:
         return 2
 
-# Função para carregar dados (substitua pelo seu dataset)
+# Função para carregar dados
 def carregar_dados():
     df = pd.read_csv("df_model.csv")
     return df
@@ -31,7 +30,7 @@ def preprocessar_dados(df):
     y = df["variavel_target"]
     scaler = MinMaxScaler()
     X_scaled = scaler.fit_transform(X)
-    return X_scaled, y, scaler
+    return X, X_scaled, y, scaler
 
 # Sidebar para navegação
 st.sidebar.title("Simulação de Risco de Crédito")
@@ -59,11 +58,27 @@ contrato_renda = total_contrato / renda_utilizada if renda_utilizada != 0 else 0
 # Botão para simular
 if st.button("Simular"):
     df = carregar_dados()
-    X, y, scaler = preprocessar_dados(df)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    X, X_scaled, y, scaler = preprocessar_dados(df)
+    X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
     
-    novo_dado = np.array([[transformar_nota(nota), idade, capital, serasa, acoes, perc_divida,
-                            restricoes, protestos, vtm, taxa_juros, contrato_renda]])
+    # Criar um dicionário com os inputs do usuário
+    dados_usuario = {
+        "nota_clinica": transformar_nota(nota),
+        "idade": idade,
+        "capital": capital,
+        "serasa": serasa,
+        "acoes": acoes,
+        "perc_divida": perc_divida,
+        "restricoes": restricoes,
+        "protestos": protestos,
+        "vtm": vtm,
+        "taxa_juros": taxa_juros,
+        "contrato_renda": contrato_renda
+    }
+    
+    # Criar DataFrame e garantir a ordem das colunas
+    novo_dado = pd.DataFrame([dados_usuario])
+    novo_dado = novo_dado[X.columns]  # Garante a mesma estrutura
     novo_dado = scaler.transform(novo_dado)
     
     if pagina == "Decision Tree":
@@ -76,8 +91,6 @@ if st.button("Simular"):
         ])
         modelo.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
         modelo.fit(X_train, y_train, epochs=10, batch_size=16, verbose=0)
-    #else:
-     #   modelo = CatBoostClassifier(verbose=0)
     
     modelo.fit(X_train, y_train)
     y_pred = modelo.predict(X_test)
@@ -93,12 +106,12 @@ if st.button("Simular"):
     sns.heatmap(confusion_matrix(y_test, y_pred), annot=True, fmt='d', cmap='Blues')
     st.pyplot(fig)
     
-    # Feature Importance
-    if pagina in ["Decision Tree"]:
+    # Feature Importance para Decision Tree
+    if pagina == "Decision Tree":
         importance = modelo.feature_importances_
         st.text("Importância das Features:")
         fig, ax = plt.subplots()
-        sns.barplot(x=importance, y=df.drop("variavel_target", axis=1).columns)
+        sns.barplot(x=importance, y=X.columns)
         st.pyplot(fig)
     
     # Curva ROC
