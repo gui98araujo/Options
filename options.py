@@ -6,10 +6,9 @@ import seaborn as sns
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import classification_report, confusion_matrix, roc_curve, auc
-2from sklearn.tree import DecisionTreeClassifier
+from sklearn.tree import DecisionTreeClassifier
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
-from catboost import CatBoostClassifier
 
 # Função para converter Nota da Clínica
 def transformar_nota(nota):
@@ -35,7 +34,7 @@ def preprocessar_dados(df):
 
 # Sidebar para navegação
 st.sidebar.title("Simulação de Risco de Crédito")
-pagina = st.sidebar.radio("Escolha o modelo:", ["Decision Tree", "Rede Neural", "CatBoost"])
+pagina = st.sidebar.radio("Escolha o modelo:", ["Decision Tree", "Rede Neural"])
 
 # Inputs do usuário
 st.title(f"Simulação com {pagina}")
@@ -76,8 +75,6 @@ if st.button("Simular"):
         ])
         modelo.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
         modelo.fit(X_train, y_train, epochs=10, batch_size=16, verbose=0)
-    else:
-        modelo = CatBoostClassifier(verbose=0)
     
     modelo.fit(X_train, y_train)
     y_pred = modelo.predict(X_test)
@@ -94,7 +91,7 @@ if st.button("Simular"):
     st.pyplot(fig)
     
     # Feature Importance
-    if pagina in ["Decision Tree", "CatBoost"]:
+    if pagina in ["Decision Tree"]:
         importance = modelo.feature_importances_
         st.text("Importância das Features:")
         fig, ax = plt.subplots()
