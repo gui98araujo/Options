@@ -7,7 +7,6 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import confusion_matrix, classification_report, roc_auc_score, roc_curve
 from imblearn.under_sampling import NearMiss
-#from catboost import CatBoostClassifier
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 
@@ -93,24 +92,6 @@ def train_decision_tree(X_train, y_train, X_test, y_test):
     fpr, tpr, thresholds = roc_curve(y_test, dt_y_proba)
     
     feature_importances = best_dt_model.feature_importances_
-    
-    return report, conf_matrix, auc_score, fpr, tpr, feature_importances
-
-# Função para treinar e avaliar o modelo CatBoostClassifier
-def train_catboost(X_train, y_train, X_test, y_test):
-    model = CatBoostClassifier()
-    model.fit(X_train, y_train)
-    
-    y_pred = model.predict(X_test)
-    y_proba = model.predict_proba(X_test)[:, 1]
-    
-    report = classification_report(y_test, y_pred)
-    conf_matrix = confusion_matrix(y_test, y_pred)
-    
-    auc_score = roc_auc_score(y_test, y_proba)
-    fpr, tpr, thresholds = roc_curve(y_test, y_proba)
-    
-    feature_importances = model.get_feature_importance()
     
     return report, conf_matrix, auc_score, fpr, tpr, feature_importances
 
@@ -265,14 +246,6 @@ def main():
             sns.barplot(x=feature_importances, y=X_train.columns)
             st.pyplot(fig_feature_importance)
         
-        elif choice == "CatBoost":
-            report, conf_matrix, auc_score, fpr, tpr, feature_importances = train_catboost(X_train, y_train, X_test, y_test)
-            display_results(report, conf_matrix, auc_score, fpr, tpr)
-            st.write("Importância das Features:")
-            fig_feature_importance = plt.figure(figsize=(10, 7))
-            sns.barplot(x=feature_importances, y=X_train.columns)
-            st.pyplot(fig_feature_importance)
-        
         elif choice == "Rede Neural":
             report, conf_matrix, auc_score, fpr, tpr = train_neural_network(X_train, y_train, X_test, y_test)
             display_results(report, conf_matrix, auc_score, fpr, tpr)
@@ -281,14 +254,6 @@ def main():
         df_input_normalized = scaler.transform(df_input)
         if choice == "Decision Tree":
             model = DecisionTreeClassifier(random_state=0)
-            model.fit(X_train, y_train)
-            proba = model.predict_proba(df_input_normalized)[:, 1]
-        elif choice == "CatBoost":
-            model = CatBoostClassifier()
-            model.fit(X_train, y_train)
-            proba = model.predict_proba(df_input_normalized)[:, 1]
-        elif choice == "CatBoost":
-            model = CatBoostClassifier()
             model.fit(X_train, y_train)
             proba = model.predict_proba(df_input_normalized)[:, 1]
         elif choice == "Rede Neural":
