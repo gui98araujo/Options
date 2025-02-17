@@ -20,22 +20,24 @@ pagina = st.sidebar.radio("Selecione o Modelo:", ["Tree Decision", "Rede Neural"
 
 # Inputs do usuário
 st.header("Insira os dados do cliente")
-                                                  
+
 # Inputs do usuário
 st.title(f"Simulação com {pagina}")
 
 nota_clinica = st.number_input("Nota da Clínica (0 a 10)", min_value=0, max_value=10, step=1)
 capacidade_idade = st.number_input("Idade", min_value=18, max_value=100, step=1)
-capital_endividamento = st.number_input("Endividamento", min_value=0.0, step=0.01)
-serasa_score = st.number_input("Serasa Score", min_value=0, max_value=1000, step=1)
-carater_acoes = st.number_input("Ações Judiciais, Cheques Sustados e PIE", min_value=0, step=1)
-carater_divida = st.number_input("Percentual de Dívida Vencida", min_value=0.0, step=0.01)
-carater_restricoes = st.number_input("Quantidade de Restrições Comerciais", min_value=0, step=1)
-serasa_protestos = st.number_input("Quantidade de Protestos", min_value=0, step=1)
-vtm_valor_total = st.number_input("Valor Total", min_value=0.0, step=0.01)
-taxa_juros = st.number_input("Taxa de Juros", min_value=0.0, step=0.01)
-renda_utilizada = st.number_input("Renda Utilizada", min_value=0.01, step=0.01)
-
+capital_endividamento = st.number_input("Capital Endividamento")
+serasa_score = st.number_input("Serasa Score")
+carater_acoes = st.number_input("Ações Judiciais / Cheques Sustados / PIE")
+carater_divida = st.number_input("Percentual de Dívida Vencida Total")
+carater_restricoes = st.number_input("Quantidade de Restrições Comerciais")
+serasa_protestos = st.number_input("Quantidade de Protestos")
+vtm_valor_total = st.number_input("Valor Total")
+taxa_juros = st.number_input("Taxa de Juros")
+total_contrato = st.number_input("Total do Contrato (Bruto)")
+renda_utilizada = st.number_input("Renda Utilizada")
+                                                
+                                                
 # Transformação da Nota da Clínica
 if nota_clinica in [0, 1, 2, 3]:
     nota_clinica = 0
