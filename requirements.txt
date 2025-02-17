@@ -19,5 +19,5 @@ seaborn
 matplotlib
 scikit-learn
 imblearn
-_catboost
+catboost
 tensorflow
