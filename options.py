@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score, roc_curve
 from sklearn.tree import DecisionTreeClassifier
-#from catboost import CatBoostClassifier
+from catboost import CatBoostClassifier
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 from imblearn.under_sampling import NearMiss
@@ -16,7 +16,7 @@ from imblearn.under_sampling import NearMiss
 st.set_page_config(page_title="Análise de Crédito", layout="wide")
 
 # Criar múltiplas páginas no Streamlit
-pagina = st.sidebar.radio("Selecione o Modelo:", ["Tree Decision", "Rede Neural", #"CatBoost"])
+pagina = st.sidebar.radio("Selecione o Modelo:", ["Tree Decision", "Rede Neural", "CatBoost"])
 
 # Inputs do usuário
 st.header("Insira os dados do cliente")
@@ -79,14 +79,15 @@ if st.button("Simular"):
     if pagina == "Tree Decision":
         model = DecisionTreeClassifier()
     elif pagina == "Rede Neural":
-        model = Sequential()
-        model.add(Dense(64, activation='relu', input_dim=X_train.shape[1]))
-        model.add(Dense(32, activation='relu'))
-        model.add(Dense(1, activation='sigmoid'))
+        model = Sequential([
+            Dense(64, activation='relu', input_dim=X_train.shape[1]),
+            Dense(32, activation='relu'),
+            Dense(1, activation='sigmoid')
+        ])
         model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
         model.fit(X_train, y_train, epochs=50, batch_size=10, verbose=1)
- #   elif pagina == "CatBoost":
-  #      model = CatBoostClassifier(verbose=0)
+    elif pagina == "CatBoost":
+        model = CatBoostClassifier(verbose=0)
     
     model.fit(X_train, y_train)
     y_pred = model.predict(X_test)
@@ -102,10 +103,7 @@ if st.button("Simular"):
     st.pyplot(fig)
     
     st.subheader("3. Importância das Features")
-    if pagina == "CatBoost":
-        feature_importance = model.get_feature_importance()
-    else:
-        feature_importance = model.feature_importances_
+    feature_importance = model.feature_importances_ if hasattr(model, 'feature_importances_') else model.get_feature_importance()
     fig, ax = plt.subplots()
     sns.barplot(x=feature_importance, y=X.columns)
     st.pyplot(fig)
@@ -118,8 +116,6 @@ if st.button("Simular"):
     ax.plot([0, 1], [0, 1], linestyle='--')
     st.pyplot(fig)
     
-    # Previsão para o usuário
-    dados_usuario_scaled = scaler.transform(dados_usuario)
-    prob_inadimplencia = model.predict_proba(dados_usuario_scaled)[:, 1][0] * 100
+    prob_inadimplencia = y_proba[0] * 100
     cor = "green" if prob_inadimplencia < 50 else "red"
     st.markdown(f"### 5. Probabilidade de Inadimplência: <span style='color:{cor};'>{prob_inadimplencia:.2f}%</span>", unsafe_allow_html=True)
