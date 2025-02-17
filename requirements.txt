@@ -14,3 +14,10 @@ openpyxl
 statsmodels
 xlrd
 xlsxwriter
+pandas
+seaborn
+matplotlib
+scikit-learn
+imblearn
+catboost
+tensorflow
