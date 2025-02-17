@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score, roc_curve
 from sklearn.tree import DecisionTreeClassifier
-from catboost import CatBoostClassifier
+#from catboost import CatBoostClassifier
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 from imblearn.under_sampling import NearMiss
@@ -16,7 +16,7 @@ from imblearn.under_sampling import NearMiss
 st.set_page_config(page_title="Análise de Crédito", layout="wide")
 
 # Criar múltiplas páginas no Streamlit
-pagina = st.sidebar.radio("Selecione o Modelo:", ["Tree Decision", "Rede Neural", "CatBoost"])
+pagina = st.sidebar.radio("Selecione o Modelo:", ["Tree Decision", "Rede Neural", #"CatBoost"])
 
 # Inputs do usuário
 st.header("Insira os dados do cliente")
@@ -85,8 +85,8 @@ if st.button("Simular"):
         model.add(Dense(1, activation='sigmoid'))
         model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
         model.fit(X_train, y_train, epochs=50, batch_size=10, verbose=1)
-    elif pagina == "CatBoost":
-        model = CatBoostClassifier(verbose=0)
+ #   elif pagina == "CatBoost":
+  #      model = CatBoostClassifier(verbose=0)
     
     model.fit(X_train, y_train)
     y_pred = model.predict(X_test)
