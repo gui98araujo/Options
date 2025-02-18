@@ -8,7 +8,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.utils import resample
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix, roc_curve, auc
 from sklearn.neural_network import MLPClassifier
-from catboost import CatBoostClassifier
+#from catboost import CatBoostClassifier
 from sklearn.tree import DecisionTreeClassifier
 
 # Função para transformar a nota da clínica
@@ -64,7 +64,7 @@ X_train, X_test, y_train, y_test = train_test_split(X_scaled, y_balanced, test_s
 # Modelos
 models = {
     "Rede Neural": MLPClassifier(hidden_layer_sizes=(50, 50), max_iter=1000, random_state=42),
-    "CatBoost": CatBoostClassifier(verbose=0, random_state=42),
+    #"CatBoost": CatBoostClassifier(verbose=0, random_state=42),
     "Tree Decision": DecisionTreeClassifier(random_state=42)
 }
 
