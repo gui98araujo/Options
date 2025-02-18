@@ -114,6 +114,7 @@ def main():
             fig3 = px.bar(x=X_train.columns, y=feature_importance, title='Importância das Features')
             st.plotly_chart(fig3)
         
+        user_input_df = pd.DataFrame([inputs])
         missing_cols = set(X_train.columns) - set(user_input_df.columns)
         for col in missing_cols:
             user_input_df[col] = 0  # Adiciona colunas ausentes com valor 0
