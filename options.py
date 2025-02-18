@@ -1,8 +1,9 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
+import plotly.figure_factory as ff
+import plotly.express as px
+import plotly.graph_objects as go
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import classification_report, confusion_matrix, roc_curve, roc_auc_score
@@ -62,20 +63,16 @@ def evaluate_model(model, X_test, y_test, model_type):
     return report, conf_matrix, auc_score, fpr, tpr, y_proba
 
 def plot_metrics(conf_matrix, auc_score, fpr, tpr):
-    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
-    sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', ax=axes[0])
-    axes[0].set_title('Matriz de Confusão')
-    axes[0].set_xlabel('Predito')
-    axes[0].set_ylabel('Real')
+    fig1 = ff.create_annotated_heatmap(z=conf_matrix, x=['Negativo', 'Positivo'], y=['Negativo', 'Positivo'], colorscale='Blues')
+    fig1.update_layout(title='Matriz de Confusão')
     
-    axes[1].plot(fpr, tpr, color='blue', label=f'ROC Curve (AUC = {auc_score:.2f})')
-    axes[1].plot([0, 1], [0, 1], color='red', linestyle='--')
-    axes[1].set_xlabel('False Positive Rate')
-    axes[1].set_ylabel('True Positive Rate')
-    axes[1].set_title('Curva ROC')
-    axes[1].legend()
+    fig2 = go.Figure()
+    fig2.add_trace(go.Scatter(x=fpr, y=tpr, mode='lines', name=f'ROC Curve (AUC = {auc_score:.2f})'))
+    fig2.add_trace(go.Scatter(x=[0, 1], y=[0, 1], mode='lines', line=dict(dash='dash'), name='Random'))
+    fig2.update_layout(title='Curva ROC', xaxis_title='False Positive Rate', yaxis_title='True Positive Rate')
     
-    st.pyplot(fig)
+    st.plotly_chart(fig1)
+    st.plotly_chart(fig2)
 
 def main():
     st.title('Simulação de Modelos de Crédito')
@@ -90,7 +87,7 @@ def main():
         inputs[name] = st.number_input(name, value=1.0 if 'Percentual' in name else 0.0, step=1.0)
     
     if st.button('Simular'):
-        df = pd.read_csv('df_model.csv')  # Carregue o dataset original aqui
+        df = pd.read_csv('df_model.csv')
         (X_train, X_test, y_train, y_test), scaler = preprocess_data(df)
         
         model = None
@@ -108,21 +105,19 @@ def main():
         report, conf_matrix, auc_score, fpr, tpr, y_proba = evaluate_model(model, X_test, y_test, model_type)
         
         st.write("### Relatório de Classificação")
-        st.json(report)
+        st.table(pd.DataFrame(report).transpose())
         
         plot_metrics(conf_matrix, auc_score, fpr, tpr)
+        
+        if model_type != 'neural_network':
+            feature_importance = model.feature_importances_
+            fig3 = px.bar(x=X_train.columns, y=feature_importance, title='Importância das Features')
+            st.plotly_chart(fig3)
         
         user_input_df = pd.DataFrame([inputs])
         user_input_df['Nota da Clínica'] = user_input_df['Nota da Clínica'].apply(lambda x: 0 if x <= 3 else (1 if x <= 7 else 2))
         user_input_df['Total do Contrato (Bruto)/renda utilizada'] = user_input_df['Total do Contrato (Bruto)'] / user_input_df['renda utilizada']
         user_input_df.drop(columns=['Total do Contrato (Bruto)', 'renda utilizada'], inplace=True)
-        
-        # Ajustando as colunas para garantir compatibilidade com o scaler
-        missing_cols = set(X_train.columns) - set(user_input_df.columns)
-        for col in missing_cols:
-            user_input_df[col] = 0  # Adiciona colunas ausentes com valor 0
-        user_input_df = user_input_df[X_train.columns]  # Reorganiza as colunas
-        
         user_input_df = pd.DataFrame(scaler.transform(user_input_df), columns=user_input_df.columns)
         
         prob_default = model.predict_proba(user_input_df)[:, 1] if model_type != 'neural_network' else model.predict(user_input_df)[0]
