@@ -38,7 +38,7 @@ X_train, X_test, y_train, y_test = train_test_split(X_res, y_res, test_size=0.25
 st.title('Análise de Risco de Crédito')
 
 # Escolha do modelo
-model_choice = st.sidebar.selectbox("Escolha o modelo", ["Decision Tree", "Neural Network"])
+model_choice = st.sidebar.selectbox("Escolha o modelo", ["CatBoost", "Neural Network"])
 
 from catboost import CatBoostClassifier
 
