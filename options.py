@@ -114,13 +114,13 @@ def main():
             fig3 = px.bar(x=X_train.columns, y=feature_importance, title='Importância das Features')
             st.plotly_chart(fig3)
         
-        user_input_df = pd.DataFrame([inputs])
-        user_input_df['Nota da Clínica'] = user_input_df['Nota da Clínica'].apply(lambda x: 0 if x <= 3 else (1 if x <= 7 else 2))
-        user_input_df['Total do Contrato (Bruto)/renda utilizada'] = user_input_df['Total do Contrato (Bruto)'] / user_input_df['renda utilizada']
-        user_input_df.drop(columns=['Total do Contrato (Bruto)', 'renda utilizada'], inplace=True)
-        user_input_df = pd.DataFrame(scaler.transform(user_input_df), columns=user_input_df.columns)
+        missing_cols = set(X_train.columns) - set(user_input_df.columns)
+        for col in missing_cols:
+            user_input_df[col] = 0  # Adiciona colunas ausentes com valor 0
+        user_input_df = user_input_df[X_train.columns]  # Reorganiza as colunas
+        user_input_df_scaled = pd.DataFrame(scaler.transform(user_input_df), columns=X_train.columns)
         
-        prob_default = model.predict_proba(user_input_df)[:, 1] if model_type != 'neural_network' else model.predict(user_input_df)[0]
+        prob_default = model.predict_proba(user_input_df_scaled)[:, 1] if model_type != 'neural_network' else model.predict(user_input_df_scaled)[0]
         
         st.write(f"### Probabilidade de Inadimplência: {prob_default[0]*100:.2f}%")
         color = 'green' if prob_default[0] < 0.5 else 'red'
