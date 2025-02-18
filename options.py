@@ -55,40 +55,6 @@ best_dt_model = grid_search.best_estimator_
 dt_y_pred = best_dt_model.predict(X_test)
 dt_y_proba = best_dt_model.predict_proba(X_test)[:, 1]
 
-# Exibir métricas
-print("Decision Tree Classifier (Optimized):")
-print(classification_report(y_test, dt_y_pred))
-
-# Matriz de Confusão
-cm = confusion_matrix(y_test, dt_y_pred)
-plt.figure(figsize=(10, 7))
-sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=['Adimplente', 'Inadimplente'], yticklabels=['Adimplente', 'Inadimplente'])
-plt.title('Decision Tree Classifier - Matriz de Confusão')
-plt.xlabel('Predito')
-plt.ylabel('Real')
-plt.show()
-
-# Curva ROC
-auc_score = roc_auc_score(y_test, dt_y_proba)
-fpr, tpr, _ = roc_curve(y_test, dt_y_proba)
-plt.figure(figsize=(10, 7))
-plt.plot(fpr, tpr, color='blue', label=f'ROC Curve (AUC = {auc_score:.2f})')
-plt.plot([0, 1], [0, 1], color='red', linestyle='--')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-plt.title('Curva ROC')
-plt.legend(loc='lower right')
-plt.show()
-
-# Importância das Features
-importances = best_dt_model.feature_importances_
-features = X.columns
-feature_importance_df = pd.DataFrame({'Feature': features, 'Importance': importances}).sort_values(by='Importance', ascending=False)
-plt.figure(figsize=(10, 7))
-sns.barplot(x='Importance', y='Feature', data=feature_importance_df, palette='Blues_r')
-plt.title('Importância das Features')
-plt.show()
-
 # Interface Streamlit
 st.title('Análise de Risco de Crédito')
 
@@ -110,3 +76,33 @@ renda_contrato = st.sidebar.slider('Valor Contrato / Renda', 0.1, 10.0, 1.0)
 dados_input = np.array([[nota_clinica, idade, endividamento, serasa_score, acoes_judiciais, percentual_divida,
                           restricoes_comerciais, quantidade_protestos, vtm_valor_total, taxa_juros, renda_contrato]])
 dados_input_scaled = scaler.transform(dados_input)
+
+# Botão de Simulação
+if st.sidebar.button("Simular"):
+    resultado = best_dt_model.predict(dados_input_scaled)
+    probabilidade = best_dt_model.predict_proba(dados_input_scaled)[:, 1]
+    
+    st.subheader("Resultado da Simulação")
+    st.write(f"Probabilidade de inadimplência: {probabilidade[0]:.2f}")
+    st.write("Status Previsto:", "Inadimplente" if resultado[0] == 1 else "Adimplente")
+    
+    # Matriz de Confusão
+    cm = confusion_matrix(y_test, dt_y_pred)
+    fig, ax = plt.subplots()
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=['Adimplente', 'Inadimplente'], yticklabels=['Adimplente', 'Inadimplente'])
+    ax.set_title('Matriz de Confusão')
+    ax.set_xlabel('Predito')
+    ax.set_ylabel('Real')
+    st.pyplot(fig)
+    
+    # Curva ROC
+    auc_score = roc_auc_score(y_test, dt_y_proba)
+    fpr, tpr, _ = roc_curve(y_test, dt_y_proba)
+    fig, ax = plt.subplots()
+    ax.plot(fpr, tpr, color='blue', label=f'ROC Curve (AUC = {auc_score:.2f})')
+    ax.plot([0, 1], [0, 1], color='red', linestyle='--')
+    ax.set_xlabel('False Positive Rate')
+    ax.set_ylabel('True Positive Rate')
+    ax.set_title('Curva ROC')
+    ax.legend(loc='lower right')
+    st.pyplot(fig)
