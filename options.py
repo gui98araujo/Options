@@ -16,8 +16,7 @@ def preprocess_data(df):
     scaler = MinMaxScaler()
     df = df.copy()
     df['Nota da Clínica'] = df['Nota da Clínica'].apply(lambda x: 0 if x <= 3 else (1 if x <= 7 else 2))
-    df['Total do Contrato (Bruto)/renda utilizada'] = df['Total do Contrato (Bruto)'] / df['renda utilizada']
-    df.drop(columns=['Total do Contrato (Bruto)', 'renda utilizada'], inplace=True)
+    df.drop(columns=['Total do Contrato (Bruto)'], inplace=True)
     
     X = df.drop(columns=['[SRM] Código da operação', 'variavel_target'])
     y = df['variavel_target']
