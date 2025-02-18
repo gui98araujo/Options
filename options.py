@@ -3,8 +3,6 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-import plotly.figure_factory as ff
-import plotly.express as px
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import classification_report, confusion_matrix, roc_curve, roc_auc_score
@@ -63,23 +61,21 @@ def evaluate_model(model, X_test, y_test, model_type):
     
     return report, conf_matrix, auc_score, fpr, tpr, y_proba
 
-def plot_confusion_matrix(conf_matrix):
-    fig = ff.create_annotated_heatmap(z=conf_matrix, x=['Negativo', 'Positivo'], y=['Negativo', 'Positivo'],
-                                      colorscale='Blues', showscale=True)
-    fig.update_layout(title='Matriz de Confusão')
-    st.plotly_chart(fig)
-
-def plot_feature_importance(model, X_train):
-    if hasattr(model, 'feature_importances_'):
-        importances = model.feature_importances_
-    else:
-        importances = np.zeros(X_train.shape[1])
+def plot_metrics(conf_matrix, auc_score, fpr, tpr):
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+    sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', ax=axes[0])
+    axes[0].set_title('Matriz de Confusão')
+    axes[0].set_xlabel('Predito')
+    axes[0].set_ylabel('Real')
     
-    df_importance = pd.DataFrame({'Feature': X_train.columns, 'Importance': importances})
-    df_importance = df_importance.sort_values(by='Importance', ascending=False)
+    axes[1].plot(fpr, tpr, color='blue', label=f'ROC Curve (AUC = {auc_score:.2f})')
+    axes[1].plot([0, 1], [0, 1], color='red', linestyle='--')
+    axes[1].set_xlabel('False Positive Rate')
+    axes[1].set_ylabel('True Positive Rate')
+    axes[1].set_title('Curva ROC')
+    axes[1].legend()
     
-    fig = px.bar(df_importance, x='Feature', y='Importance', title='Importância das Features')
-    st.plotly_chart(fig)
+    st.pyplot(fig)
 
 def main():
     st.title('Simulação de Modelos de Crédito')
@@ -111,17 +107,29 @@ def main():
         
         report, conf_matrix, auc_score, fpr, tpr, y_proba = evaluate_model(model, X_test, y_test, model_type)
         
-        st.write("### Tabela de Métricas")
-        st.dataframe(pd.DataFrame(report).transpose())
+        st.write("### Relatório de Classificação")
+        st.json(report)
         
-        plot_confusion_matrix(conf_matrix)
+        plot_metrics(conf_matrix, auc_score, fpr, tpr)
         
-        if model_type != 'neural_network':
-            plot_feature_importance(model, X_train)
+        user_input_df = pd.DataFrame([inputs])
+        user_input_df['Nota da Clínica'] = user_input_df['Nota da Clínica'].apply(lambda x: 0 if x <= 3 else (1 if x <= 7 else 2))
+        user_input_df['Total do Contrato (Bruto)/renda utilizada'] = user_input_df['Total do Contrato (Bruto)'] / user_input_df['renda utilizada']
+        user_input_df.drop(columns=['Total do Contrato (Bruto)', 'renda utilizada'], inplace=True)
         
-        st.write(f"### Probabilidade de Inadimplência: {y_proba[0]*100:.2f}%")
-        color = 'green' if y_proba[0] < 0.5 else 'red'
-        st.markdown(f'<p style="color:{color}; font-size:24px">{y_proba[0]*100:.2f}%</p>', unsafe_allow_html=True)
+        # Ajustando as colunas para garantir compatibilidade com o scaler
+        missing_cols = set(X_train.columns) - set(user_input_df.columns)
+        for col in missing_cols:
+            user_input_df[col] = 0  # Adiciona colunas ausentes com valor 0
+        user_input_df = user_input_df[X_train.columns]  # Reorganiza as colunas
+        
+        user_input_df = pd.DataFrame(scaler.transform(user_input_df), columns=user_input_df.columns)
+        
+        prob_default = model.predict_proba(user_input_df)[:, 1] if model_type != 'neural_network' else model.predict(user_input_df)[0]
+        
+        st.write(f"### Probabilidade de Inadimplência: {prob_default[0]*100:.2f}%")
+        color = 'green' if prob_default[0] < 0.5 else 'red'
+        st.markdown(f'<p style="color:{color}; font-size:24px">{prob_default[0]*100:.2f}%</p>', unsafe_allow_html=True)
 
 if __name__ == '__main__':
     main()
