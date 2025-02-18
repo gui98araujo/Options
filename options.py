@@ -6,6 +6,7 @@ import streamlit as st
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import classification_report, confusion_matrix, roc_curve, auc, roc_auc_score
 from imblearn.under_sampling import NearMiss
 from sklearn.model_selection import GridSearchCV
@@ -33,30 +34,39 @@ X_res, y_res = tnr.fit_resample(X, y)
 # Dividir os dados em treino e teste
 X_train, X_test, y_train, y_test = train_test_split(X_res, y_res, test_size=0.25, stratify=y_res, random_state=0)
 
-# Definir modelo de Decision Tree
-dt_model = DecisionTreeClassifier(random_state=0)
+# Interface Streamlit
+st.title('Análise de Risco de Crédito')
 
-# Definir os hiperparâmetros para otimização
-param_grid = {
-    'criterion': ['gini', 'entropy'],
-    'max_depth': [None, 10, 20, 30, 40, 50],
-    'min_samples_split': [2, 5, 10],
-    'min_samples_leaf': [1, 2, 4]
-}
+# Escolha do modelo
+model_choice = st.sidebar.selectbox("Escolha o modelo", ["Decision Tree", "Neural Network"])
+
+if model_choice == "Decision Tree":
+    model = DecisionTreeClassifier(random_state=0)
+    param_grid = {
+        'criterion': ['gini', 'entropy'],
+        'max_depth': [None, 10, 20, 30, 40, 50],
+        'min_samples_split': [2, 5, 10],
+        'min_samples_leaf': [1, 2, 4]
+    }
+elif model_choice == "Neural Network":
+    model = MLPClassifier(max_iter=500, random_state=0)
+    param_grid = {
+        'hidden_layer_sizes': [(50,), (100,), (50, 50)],
+        'activation': ['relu', 'tanh'],
+        'solver': ['adam', 'sgd'],
+        'alpha': [0.0001, 0.001]
+    }
 
 # Otimizar os parâmetros usando GridSearchCV
-grid_search = GridSearchCV(estimator=dt_model, param_grid=param_grid, cv=5, n_jobs=-1, verbose=2)
+grid_search = GridSearchCV(estimator=model, param_grid=param_grid, cv=5, n_jobs=-1, verbose=2)
 grid_search.fit(X_train, y_train)
 
 # Melhor modelo encontrado
-best_dt_model = grid_search.best_estimator_
+best_model = grid_search.best_estimator_
 
 # Fazer previsões
-dt_y_pred = best_dt_model.predict(X_test)
-dt_y_proba = best_dt_model.predict_proba(X_test)[:, 1]
-
-# Interface Streamlit
-st.title('Análise de Risco de Crédito')
+y_pred = best_model.predict(X_test)
+y_proba = best_model.predict_proba(X_test)[:, 1]
 
 # Input do usuário
 st.sidebar.header('Preencha os dados para simulação')
@@ -79,15 +89,15 @@ dados_input_scaled = scaler.transform(dados_input)
 
 # Botão de Simulação
 if st.sidebar.button("Simular"):
-    resultado = best_dt_model.predict(dados_input_scaled)
-    probabilidade = best_dt_model.predict_proba(dados_input_scaled)[:, 1]
+    resultado = best_model.predict(dados_input_scaled)
+    probabilidade = best_model.predict_proba(dados_input_scaled)[:, 1]
     
     st.subheader("Resultado da Simulação")
     st.write(f"Probabilidade de inadimplência: {probabilidade[0]:.2f}")
     st.write("Status Previsto:", "Inadimplente" if resultado[0] == 1 else "Adimplente")
     
     # Matriz de Confusão
-    cm = confusion_matrix(y_test, dt_y_pred)
+    cm = confusion_matrix(y_test, y_pred)
     fig, ax = plt.subplots()
     sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=['Adimplente', 'Inadimplente'], yticklabels=['Adimplente', 'Inadimplente'])
     ax.set_title('Matriz de Confusão')
@@ -96,8 +106,8 @@ if st.sidebar.button("Simular"):
     st.pyplot(fig)
     
     # Curva ROC
-    auc_score = roc_auc_score(y_test, dt_y_proba)
-    fpr, tpr, _ = roc_curve(y_test, dt_y_proba)
+    auc_score = roc_auc_score(y_test, y_proba)
+    fpr, tpr, _ = roc_curve(y_test, y_proba)
     fig, ax = plt.subplots()
     ax.plot(fpr, tpr, color='blue', label=f'ROC Curve (AUC = {auc_score:.2f})')
     ax.plot([0, 1], [0, 1], color='red', linestyle='--')
