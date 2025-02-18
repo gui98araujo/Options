@@ -124,3 +124,7 @@ def main():
         st.write(f"### Probabilidade de Inadimplência: {prob_default[0]*100:.2f}%")
         color = 'green' if prob_default[0] < 0.5 else 'red'
         st.markdown(f'<p style="color:{color}; font-size:24px">{prob_default[0]*100:.2f}%</p>', unsafe_allow_html=True)
+
+
+if __name__ == '__main__':
+    main()
