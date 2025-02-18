@@ -40,13 +40,15 @@ st.title('Análise de Risco de Crédito')
 # Escolha do modelo
 model_choice = st.sidebar.selectbox("Escolha o modelo", ["Decision Tree", "Neural Network"])
 
-if model_choice == "Decision Tree":
-    model = DecisionTreeClassifier(random_state=0)
+from catboost import CatBoostClassifier
+
+if model_choice == "CatBoost":
+    model = CatBoostClassifier(verbose=0, random_seed=0)
     param_grid = {
-        'criterion': ['gini', 'entropy'],
-        'max_depth': [None, 10, 20, 30, 40, 50],
-        'min_samples_split': [2, 5, 10],
-        'min_samples_leaf': [1, 2, 4]
+        'iterations': [100, 500, 1000],
+        'learning_rate': [0.01, 0.05, 0.1],
+        'depth': [4, 6, 10],
+        'l2_leaf_reg': [1, 3, 5]
     }
 elif model_choice == "Neural Network":
     model = MLPClassifier(max_iter=500, random_state=0)
@@ -67,7 +69,6 @@ best_model = grid_search.best_estimator_
 # Fazer previsões
 y_pred = best_model.predict(X_test)
 y_proba = best_model.predict_proba(X_test)[:, 1]
-
 # Input do usuário
 st.sidebar.header('Preencha os dados para simulação')
 nota_clinica = st.sidebar.selectbox('Nota da Clínica', options=[0, 1, 2])
