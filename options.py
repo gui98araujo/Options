@@ -78,6 +78,11 @@ def plot_feature_importance(model, X_train):
         fig = px.bar(df_importance, x='Importance', y='Feature', orientation='h', title='Feature Importance')
         st.plotly_chart(fig)
 
+def plot_roc_curve(fpr, tpr, auc_score):
+    fig = px.area(x=fpr, y=tpr, title=f'Curva ROC (AUC = {auc_score:.2f})', labels={'x': 'False Positive Rate', 'y': 'True Positive Rate'})
+    fig.add_shape(type='line', x0=0, y0=0, x1=1, y1=1, line=dict(color='red', dash='dash'))
+    st.plotly_chart(fig)
+
 def main():
     st.title('Simulação de Modelos de Crédito')
     model_choice = st.sidebar.selectbox("Escolha o modelo", ['Tree Decision', 'Rede Neural', 'CatBoost'])
@@ -112,20 +117,8 @@ def main():
         st.dataframe(pd.DataFrame(report).transpose())
         
         plot_conf_matrix(conf_matrix)
-        
         plot_feature_importance(model, X_train)
-        
-        user_input_df = pd.DataFrame([inputs])
-        user_input_df['Nota da Clínica'] = user_input_df['Nota da Clínica'].apply(lambda x: 0 if x <= 3 else (1 if x <= 7 else 2))
-        user_input_df['Total do Contrato (Bruto)/renda utilizada'] = user_input_df['Total do Contrato (Bruto)'] / user_input_df['renda utilizada']
-        user_input_df.drop(columns=['Total do Contrato (Bruto)', 'renda utilizada'], inplace=True)
-        
-        missing_cols = set(X_train.columns) - set(user_input_df.columns)
-        for col in missing_cols:
-            user_input_df[col] = 0
-        user_input_df = user_input_df[X_train.columns]
-        
-        user_input_df = pd.DataFrame(scaler.transform(user_input_df), columns=user_input_df.columns)
+        plot_roc_curve(fpr, tpr, auc_score)
         
         prob_default = model.predict_proba(user_input_df)[:, 1] if model_type != 'neural_network' else model.predict(user_input_df)[0]
         
