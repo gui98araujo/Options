@@ -46,7 +46,7 @@ def train_catboost(X_train, y_train):
     model.fit(X_train, y_train)
     return model
 
-def evaluate_model(model, X_test, y_test, scaler, model_type):
+def evaluate_model(model, X_test, y_test, model_type):
     if model_type == 'neural_network':
         y_pred = (model.predict(X_test) > 0.5).astype(int)
         y_proba = model.predict(X_test)
@@ -105,7 +105,7 @@ def main():
             model = train_catboost(X_train, y_train)
             model_type = 'catboost'
         
-        report, conf_matrix, auc_score, fpr, tpr, y_proba = evaluate_model(model, X_test, y_test, scaler, model_type)
+        report, conf_matrix, auc_score, fpr, tpr, y_proba = evaluate_model(model, X_test, y_test, model_type)
         
         st.write("### Relatório de Classificação")
         st.json(report)
@@ -116,6 +116,13 @@ def main():
         user_input_df['Nota da Clínica'] = user_input_df['Nota da Clínica'].apply(lambda x: 0 if x <= 3 else (1 if x <= 7 else 2))
         user_input_df['Total do Contrato (Bruto)/renda utilizada'] = user_input_df['Total do Contrato (Bruto)'] / user_input_df['renda utilizada']
         user_input_df.drop(columns=['Total do Contrato (Bruto)', 'renda utilizada'], inplace=True)
+        
+        # Ajustando as colunas para garantir compatibilidade com o scaler
+        missing_cols = set(X_train.columns) - set(user_input_df.columns)
+        for col in missing_cols:
+            user_input_df[col] = 0  # Adiciona colunas ausentes com valor 0
+        user_input_df = user_input_df[X_train.columns]  # Reorganiza as colunas
+        
         user_input_df = pd.DataFrame(scaler.transform(user_input_df), columns=user_input_df.columns)
         
         prob_default = model.predict_proba(user_input_df)[:, 1] if model_type != 'neural_network' else model.predict(user_input_df)[0]
@@ -123,7 +130,6 @@ def main():
         st.write(f"### Probabilidade de Inadimplência: {prob_default[0]*100:.2f}%")
         color = 'green' if prob_default[0] < 0.5 else 'red'
         st.markdown(f'<p style="color:{color}; font-size:24px">{prob_default[0]*100:.2f}%</p>', unsafe_allow_html=True)
-
 
 if __name__ == '__main__':
     main()
