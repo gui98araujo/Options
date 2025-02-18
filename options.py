@@ -63,24 +63,22 @@ def evaluate_model(model, X_test, y_test, model_type):
     
     return report, conf_matrix, auc_score, fpr, tpr, y_proba
 
-def plot_conf_matrix(conf_matrix):
-    labels = ['Negativo', 'Positivo']
-    fig = ff.create_annotated_heatmap(z=conf_matrix, x=labels, y=labels, colorscale='Blues')
-    fig.update_layout(title_text='Matriz de Confusão')
+def plot_confusion_matrix(conf_matrix):
+    fig = ff.create_annotated_heatmap(z=conf_matrix, x=['Negativo', 'Positivo'], y=['Negativo', 'Positivo'],
+                                      colorscale='Blues', showscale=True)
+    fig.update_layout(title='Matriz de Confusão')
     st.plotly_chart(fig)
 
 def plot_feature_importance(model, X_train):
     if hasattr(model, 'feature_importances_'):
-        feature_importance = model.feature_importances_
-        features = X_train.columns
-        df_importance = pd.DataFrame({'Feature': features, 'Importance': feature_importance})
-        df_importance = df_importance.sort_values(by='Importance', ascending=False)
-        fig = px.bar(df_importance, x='Importance', y='Feature', orientation='h', title='Feature Importance')
-        st.plotly_chart(fig)
-
-def plot_roc_curve(fpr, tpr, auc_score):
-    fig = px.area(x=fpr, y=tpr, title=f'Curva ROC (AUC = {auc_score:.2f})', labels={'x': 'False Positive Rate', 'y': 'True Positive Rate'})
-    fig.add_shape(type='line', x0=0, y0=0, x1=1, y1=1, line=dict(color='red', dash='dash'))
+        importances = model.feature_importances_
+    else:
+        importances = np.zeros(X_train.shape[1])
+    
+    df_importance = pd.DataFrame({'Feature': X_train.columns, 'Importance': importances})
+    df_importance = df_importance.sort_values(by='Importance', ascending=False)
+    
+    fig = px.bar(df_importance, x='Feature', y='Importance', title='Importância das Features')
     st.plotly_chart(fig)
 
 def main():
@@ -116,15 +114,14 @@ def main():
         st.write("### Tabela de Métricas")
         st.dataframe(pd.DataFrame(report).transpose())
         
-        plot_conf_matrix(conf_matrix)
-        plot_feature_importance(model, X_train)
-        plot_roc_curve(fpr, tpr, auc_score)
+        plot_confusion_matrix(conf_matrix)
         
-        prob_default = model.predict_proba(user_input_df)[:, 1] if model_type != 'neural_network' else model.predict(user_input_df)[0]
+        if model_type != 'neural_network':
+            plot_feature_importance(model, X_train)
         
-        st.write(f"### Probabilidade de Inadimplência: {prob_default[0]*100:.2f}%")
-        color = 'green' if prob_default[0] < 0.5 else 'red'
-        st.markdown(f'<p style="color:{color}; font-size:24px">{prob_default[0]*100:.2f}%</p>', unsafe_allow_html=True)
+        st.write(f"### Probabilidade de Inadimplência: {y_proba[0]*100:.2f}%")
+        color = 'green' if y_proba[0] < 0.5 else 'red'
+        st.markdown(f'<p style="color:{color}; font-size:24px">{y_proba[0]*100:.2f}%</p>', unsafe_allow_html=True)
 
 if __name__ == '__main__':
     main()
