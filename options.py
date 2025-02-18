@@ -1,17 +1,17 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import plotly.figure_factory as ff
-import plotly.express as px
+import matplotlib.pyplot as plt
+import seaborn as sns
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+from sklearn.utils import resample
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix, roc_curve, auc
+from sklearn.neural_network import MLPClassifier
+from catboost import CatBoostClassifier
 from sklearn.tree import DecisionTreeClassifier
-#from catboost import CatBoostClassifier
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense
 
-# Função para transformação da nota
+# Função para transformar a nota da clínica
 def transformar_nota(nota):
     if nota in [0, 1, 2, 3]:
         return 0
@@ -20,106 +20,119 @@ def transformar_nota(nota):
     else:
         return 2
 
-# Layout do Streamlit
-st.set_page_config(page_title="Análise de Risco de Crédito", layout="wide")
-
-# Sidebar para navegação
-st.sidebar.title("Menu")
-pagina = st.sidebar.radio("Selecione um Modelo", ["Rede Neural", "Decision Tree"])
-
-# Inputs do usuário
-st.title(f"Simulação com {pagina}")
-
-nota = st.number_input("Nota da Clínica (1 a 10)", 1, 10, step=1)
-idade = st.number_input("Idade", 18, 100, step=1)
-endividamento = st.number_input("Endividamento (%)", 0.0, 100.0, step=0.1)
-serasa_score = st.number_input("Serasa Score", 0, 1000, step=1)
-acoes_judiciais = st.number_input("Ações Judiciais", 0, 50, step=1)
-perc_divida = st.number_input("Percentual de Dívida Vencida (%)", 0.0, 100.0, step=0.1)
-restricoes_comerciais = st.number_input("Restrições Comerciais", 0, 50, step=1)
-protestos = st.number_input("Quantidade de Protestos", 0, 50, step=1)
-vtm_valor_total = st.number_input("VTM Valor Total", 0.0, 1e6, step=1000.0)
-taxa_juros = st.number_input("Taxa de Juros (%)", 0.0, 100.0, step=0.1)
-valor_contrato = st.number_input("Valor do Contrato (Bruto)", 0.0, 1e6, step=1000.0)
-renda_solicitante = st.number_input("Renda do Solicitante", 0.0, 1e6, step=1000.0)
-
-# Criar dataframe com as features inseridas
-dados_input = pd.DataFrame({
-    'Nota Clínica': [transformar_nota(nota)],
-    'Idade': [idade],
-    'Endividamento': [endividamento],
-    'Serasa Score': [serasa_score],
-    'Ações Judiciais': [acoes_judiciais],
-    'Percentual de Dívida Vencida': [perc_divida],
-    'Restrições Comerciais': [restricoes_comerciais],
-    'Quantidade de Protestos': [protestos],
-    'VTM Valor Total': [vtm_valor_total],
-    'Taxa de Juros': [taxa_juros],
-    'Total Contrato/Renda': [valor_contrato / (renda_solicitante + 1e-6)]  # Evitar divisão por zero
+# Simulando um dataset
+np.random.seed(42)
+df = pd.DataFrame({
+    'Nota_Clinica': np.random.randint(1, 11, 1000),
+    'Idade': np.random.randint(18, 70, 1000),
+    'Endividamento': np.random.uniform(0, 100, 1000),
+    'Serasa_Score': np.random.randint(300, 1000, 1000),
+    'Acoes_Judiciais': np.random.randint(0, 5, 1000),
+    'Percentual_Divida_Vencida': np.random.uniform(0, 100, 1000),
+    'Restricoes_Comerciais': np.random.randint(0, 5, 1000),
+    'Quantidade_Protestos': np.random.randint(0, 5, 1000),
+    'VTM_Valor_Total': np.random.uniform(1000, 50000, 1000),
+    'Taxa_Juros': np.random.uniform(2, 15, 1000),
+    'Valor_Contrato': np.random.uniform(5000, 100000, 1000),
+    'Renda_Solicitante': np.random.uniform(1000, 20000, 1000),
+    'Inadimplente': np.random.randint(0, 2, 1000)
 })
 
-# Simular banco de dados para treinamento
-df_model = pd.DataFrame(np.random.rand(1000, len(dados_input.columns)), columns=dados_input.columns)
-df_model['inadimplente'] = np.random.randint(0, 2, 1000)
+# Aplicando transformações
+df['Nota_Clinica'] = df['Nota_Clinica'].apply(transformar_nota)
+df['Renda_Contrato'] = df['Valor_Contrato'] / df['Renda_Solicitante']
+df.drop(columns=['Valor_Contrato', 'Renda_Solicitante'], inplace=True)
 
-# Separação de treino e teste
-X = df_model.drop(columns=['inadimplente'])
-y = df_model['inadimplente']
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# Separando features e target
+X = df.drop(columns=['Inadimplente'])
+y = df['Inadimplente']
 
-# Normalização dos dados
+# Balanceamento de dados
+X_0, y_0 = X[y == 0], y[y == 0]
+X_1, y_1 = X[y == 1], y[y == 1]
+X_1_resampled, y_1_resampled = resample(X_1, y_1, replace=True, n_samples=len(y_0), random_state=42)
+X_balanced = pd.concat([X_0, X_1_resampled])
+y_balanced = pd.concat([y_0, y_1_resampled])
+
+# Normalização
 scaler = StandardScaler()
-X_train = scaler.fit_transform(X_train)
-X_test = scaler.transform(X_test)
-dados_input_scaled = scaler.transform(dados_input)
+X_scaled = scaler.fit_transform(X_balanced)
 
-# Treinamento e Previsão
+# Divisão treino/teste
+X_train, X_test, y_train, y_test = train_test_split(X_scaled, y_balanced, test_size=0.2, random_state=42)
+
+# Modelos
+models = {
+    "Rede Neural": MLPClassifier(hidden_layer_sizes=(50, 50), max_iter=1000, random_state=42),
+    "CatBoost": CatBoostClassifier(verbose=0, random_state=42),
+    "Tree Decision": DecisionTreeClassifier(random_state=42)
+}
+
+# Streamlit
+st.title("Classificação de Inadimplência")
+menu = st.sidebar.radio("Escolha um modelo", list(models.keys()))
+
+# Inputs do usuário
+st.header("Insira os dados para previsão")
+user_input = {}
+for col in X.columns:
+    user_input[col] = st.number_input(col, value=float(df[col].mean()))
+
 if st.button("Simular"):
-    if pagina == "Rede Neural":
-        modelo = Sequential([
-            Dense(16, activation='relu', input_shape=(X_train.shape[1],)),
-            Dense(8, activation='relu'),
-            Dense(1, activation='sigmoid')
-        ])
-        modelo.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
-        modelo.fit(X_train, y_train, epochs=10, batch_size=10, verbose=0)
-        y_pred = (modelo.predict(X_test) > 0.5).astype(int)
-        prob_input = modelo.predict(dados_input_scaled)[0][0]
+    model = models[menu]
+    model.fit(X_train, y_train)
     
-    #elif pagina == "CatBoost":
-        #modelo = CatBoostClassifier(verbose=0)
-        #modelo.fit(X_train, y_train)
-        #y_pred = modelo.predict(X_test)
-        #prob_input = modelo.predict_proba(dados_input_scaled)[0][1]
-    
-    elif pagina == "Decision Tree":
-        modelo = DecisionTreeClassifier()
-        modelo.fit(X_train, y_train)
-        y_pred = modelo.predict(X_test)
-        prob_input = modelo.predict_proba(dados_input_scaled)[0][1]
+    # Predições
+    y_pred = model.predict(X_test)
+    y_proba = model.predict_proba(X_test)[:, 1]
+    y_input_proba = model.predict_proba(scaler.transform(pd.DataFrame([user_input])))[:, 1][0]
     
     # Métricas
     acc = accuracy_score(y_test, y_pred)
     prec = precision_score(y_test, y_pred)
     rec = recall_score(y_test, y_pred)
     f1 = f1_score(y_test, y_pred)
-    st.write(f"**Acurácia:** {acc:.2f}")
-    st.write(f"**Precisão:** {prec:.2f}")
-    st.write(f"**Recall:** {rec:.2f}")
-    st.write(f"**F1-Score:** {f1:.2f}")
-
-    # Matriz de Confusão
     cm = confusion_matrix(y_test, y_pred)
-    fig = ff.create_annotated_heatmap(z=cm, x=['Não Inadimplente', 'Inadimplente'], 
-                                      y=['Não Inadimplente', 'Inadimplente'], colorscale='Blues')
-    st.plotly_chart(fig)
+    
+    # Exibindo métricas
+    st.subheader("Métricas do Modelo")
+    st.write(f"Acurácia: {acc:.2f}")
+    st.write(f"Precisão: {prec:.2f}")
+    st.write(f"Recall: {rec:.2f}")
+    st.write(f"F1-Score: {f1:.2f}")
+    
+    # Matriz de Confusão
+    st.subheader("Matriz de Confusão")
+    fig, ax = plt.subplots()
+    sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", ax=ax)
+    st.pyplot(fig)
     
     # Curva ROC
-    fpr, tpr, _ = roc_curve(y_test, y_pred)
+    fpr, tpr, _ = roc_curve(y_test, y_proba)
     roc_auc = auc(fpr, tpr)
-    fig_roc = px.area(x=fpr, y=tpr, title=f"Curva ROC (AUC = {roc_auc:.2f})")
-    st.plotly_chart(fig_roc)
+    st.subheader("Curva ROC")
+    fig, ax = plt.subplots()
+    ax.plot(fpr, tpr, label=f'Área sob a curva (AUC) = {roc_auc:.2f}')
+    ax.plot([0, 1], [0, 1], linestyle='--', color='gray')
+    ax.set_xlabel('Falso Positivo')
+    ax.set_ylabel('Verdadeiro Positivo')
+    ax.legend()
+    st.pyplot(fig)
     
-    # Resultado final
-    risco_cor = "red" if prob_input >= 0.5 else "green"
-    st.markdown(f"### Probabilidade de inadimplência: <span style='color:{risco_cor}; font-size:20px;'>{prob_input:.2%}</span>", unsafe_allow_html=True)
+    # DataFrame de resultados
+    df_result = pd.DataFrame({
+        'Probabilidade de Inadimplência': y_proba,
+        'Classificação': ['Risco Alto' if p > 0.5 else 'Risco Baixo' for p in y_proba]
+    })
+    df_result = df_result.sort_values(by='Probabilidade de Inadimplência', ascending=False)
+    
+    st.subheader("Resultados da Classificação")
+    def highlight_risk(val):
+        color = 'red' if val > 0.5 else 'green'
+        return f'background-color: {color}'
+    st.dataframe(df_result.style.applymap(highlight_risk, subset=['Probabilidade de Inadimplência']))
+    
+    # Resultado do input
+    st.subheader("Resultado do Caso Simulado")
+    color = "🔴" if y_input_proba > 0.5 else "🟢"
+    st.write(f"Probabilidade de inadimplência: {y_input_proba:.2f} {color}")
