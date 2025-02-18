@@ -10,7 +10,7 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import classification_report, confusion_matrix, roc_curve, auc, roc_auc_score
 from imblearn.under_sampling import NearMiss
 from sklearn.model_selection import GridSearchCV
-
+import catboost 
 # Carregar o dataset
 df_model = pd.read_csv("df_model.csv")
 
