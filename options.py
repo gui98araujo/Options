@@ -88,7 +88,7 @@ def main():
                    'VTM Valor Total', 'Taxa de Juros', 'Total do Contrato (Bruto)', 'renda utilizada']
     
     for name in input_names:
-        inputs[name] = st.number_input(name, value=1.0 if 'Percentual' in name else 0, step=1.0)
+        inputs[name] = st.number_input(name, value=1.0 if 'Percentual' in name else 0.0, step=1.0)
     
     if st.button('Simular'):
         df = pd.read_csv('df_model.csv')  # Carregue o dataset original aqui
