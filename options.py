@@ -5,115 +5,122 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
-from sklearn.metrics import classification_report, confusion_matrix, roc_curve, auc
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import classification_report, confusion_matrix, roc_curve, roc_auc_score
+from catboost import CatBoostClassifier
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
-from catboost import CatBoostClassifier
+from sklearn.tree import DecisionTreeClassifier
+from imblearn.under_sampling import NearMiss
 
-# Função para converter Nota da Clínica
-def transformar_nota(nota):
-    if nota in [0, 1, 2, 3]:
-        return 0
-    elif nota in [4, 5, 6, 7]:
-        return 1
-    else:
-        return 2
-
-# Função para carregar dados (substitua pelo seu dataset)
-def carregar_dados():
-    df = pd.read_csv("df_model.csv")
-    return df
-
-# Função para preprocessamento
-def preprocessar_dados(df):
-    X = df.drop("target", axis=1)
-    y = df["target"]
+def preprocess_data(df):
     scaler = MinMaxScaler()
-    X_scaled = scaler.fit_transform(X)
-    return X_scaled, y, scaler
-
-# Sidebar para navegação
-st.sidebar.title("Simulação de Risco de Crédito")
-pagina = st.sidebar.radio("Escolha o modelo:", ["Decision Tree", "Rede Neural", "CatBoost"])
-
-# Inputs do usuário
-st.title(f"Simulação com {pagina}")
-
-nota = st.number_input("Nota da Clínica (0 a 10)", min_value=0, max_value=10, step=1)
-idade = st.number_input("Idade", min_value=18, max_value=100, step=1)
-capital = st.number_input("Capital Endividamento")
-serasa = st.number_input("Serasa Score")
-acoes = st.number_input("Ações Judiciais / Cheques Sustados / PIE")
-perc_divida = st.number_input("Percentual de Dívida Vencida Total")
-restricoes = st.number_input("Quantidade de Restrições Comerciais")
-protestos = st.number_input("Quantidade de Protestos")
-vtm = st.number_input("Valor Total")
-taxa_juros = st.number_input("Taxa de Juros")
-total_contrato = st.number_input("Total do Contrato (Bruto)")
-renda_utilizada = st.number_input("Renda Utilizada")
-
-# Criando variável derivada
-contrato_renda = total_contrato / renda_utilizada if renda_utilizada != 0 else 0
-
-# Botão para simular
-if st.button("Simular"):
-    df = carregar_dados()
-    X, y, scaler = preprocessar_dados(df)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    df = df.copy()
+    df['Nota da Clínica'] = df['Nota da Clínica'].apply(lambda x: 0 if x <= 3 else (1 if x <= 7 else 2))
+    df['Total do Contrato (Bruto)/renda utilizada'] = df['Total do Contrato (Bruto)'] / df['renda utilizada']
+    df.drop(columns=['Total do Contrato (Bruto)', 'renda utilizada'], inplace=True)
     
-    novo_dado = np.array([[transformar_nota(nota), idade, capital, serasa, acoes, perc_divida,
-                            restricoes, protestos, vtm, taxa_juros, contrato_renda]])
-    novo_dado = scaler.transform(novo_dado)
+    X = df.drop(columns=['[SRM] Código da operação', 'variavel_target'])
+    y = df['variavel_target']
+    X = pd.DataFrame(scaler.fit_transform(X), columns=X.columns)
     
-    if pagina == "Decision Tree":
-        modelo = DecisionTreeClassifier()
-    elif pagina == "Rede Neural":
-        modelo = Sequential([
-            Dense(16, activation='relu', input_shape=(X_train.shape[1],)),
-            Dense(8, activation='relu'),
-            Dense(1, activation='sigmoid')
-        ])
-        modelo.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
-        modelo.fit(X_train, y_train, epochs=10, batch_size=16, verbose=0)
+    nr = NearMiss()
+    X, y = nr.fit_resample(X, y)
+    return train_test_split(X, y, test_size=0.25, stratify=y, random_state=0), scaler
+
+def train_decision_tree(X_train, y_train):
+    model = DecisionTreeClassifier(random_state=0)
+    model.fit(X_train, y_train)
+    return model
+
+def train_neural_network(X_train, y_train):
+    model = Sequential([
+        Dense(64, activation='relu', input_dim=X_train.shape[1]),
+        Dense(32, activation='relu'),
+        Dense(1, activation='sigmoid')
+    ])
+    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+    model.fit(X_train, y_train, epochs=50, batch_size=10, verbose=0)
+    return model
+
+def train_catboost(X_train, y_train):
+    model = CatBoostClassifier(verbose=0)
+    model.fit(X_train, y_train)
+    return model
+
+def evaluate_model(model, X_test, y_test, scaler, model_type):
+    if model_type == 'neural_network':
+        y_pred = (model.predict(X_test) > 0.5).astype(int)
+        y_proba = model.predict(X_test)
     else:
-        modelo = CatBoostClassifier(verbose=0)
+        y_pred = model.predict(X_test)
+        y_proba = model.predict_proba(X_test)[:, 1]
     
-    modelo.fit(X_train, y_train)
-    y_pred = modelo.predict(X_test)
-    y_proba = modelo.predict_proba(X_test)[:, 1]
-    
-    # Exibir métricas
-    st.text("Relatório de Classificação:")
-    st.text(classification_report(y_test, y_pred))
-    
-    # Matriz de confusão
-    st.text("Matriz de Confusão:")
-    fig, ax = plt.subplots()
-    sns.heatmap(confusion_matrix(y_test, y_pred), annot=True, fmt='d', cmap='Blues')
-    st.pyplot(fig)
-    
-    # Feature Importance
-    if pagina in ["Decision Tree", "CatBoost"]:
-        importance = modelo.feature_importances_
-        st.text("Importância das Features:")
-        fig, ax = plt.subplots()
-        sns.barplot(x=importance, y=df.drop("target", axis=1).columns)
-        st.pyplot(fig)
-    
-    # Curva ROC
+    report = classification_report(y_test, y_pred, output_dict=True)
+    conf_matrix = confusion_matrix(y_test, y_pred)
+    auc_score = roc_auc_score(y_test, y_proba)
     fpr, tpr, _ = roc_curve(y_test, y_proba)
-    roc_auc = auc(fpr, tpr)
-    st.text("Curva ROC:")
-    fig, ax = plt.subplots()
-    plt.plot(fpr, tpr, label=f'AUC = {roc_auc:.2f}')
-    plt.plot([0, 1], [0, 1], linestyle='--')
-    plt.xlabel("Falso Positivo")
-    plt.ylabel("Verdadeiro Positivo")
-    plt.legend()
-    st.pyplot(fig)
     
-    # Previsão para o novo cliente
-    prob = modelo.predict_proba(novo_dado)[:, 1][0] * 100
-    cor = "green" if prob < 50 else "red"
-    st.markdown(f"<h3 style='color:{cor}'>Probabilidade de Inadimplência: {prob:.2f}%</h3>", unsafe_allow_html=True)
+    return report, conf_matrix, auc_score, fpr, tpr, y_proba
+
+def plot_metrics(conf_matrix, auc_score, fpr, tpr):
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+    sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', ax=axes[0])
+    axes[0].set_title('Matriz de Confusão')
+    axes[0].set_xlabel('Predito')
+    axes[0].set_ylabel('Real')
+    
+    axes[1].plot(fpr, tpr, color='blue', label=f'ROC Curve (AUC = {auc_score:.2f})')
+    axes[1].plot([0, 1], [0, 1], color='red', linestyle='--')
+    axes[1].set_xlabel('False Positive Rate')
+    axes[1].set_ylabel('True Positive Rate')
+    axes[1].set_title('Curva ROC')
+    axes[1].legend()
+    
+    st.pyplot(fig)
+
+def main():
+    st.title('Simulação de Modelos de Crédito')
+    model_choice = st.sidebar.selectbox("Escolha o modelo", ['Tree Decision', 'Rede Neural', 'CatBoost'])
+    
+    inputs = {}
+    input_names = ['Nota da Clínica', 'Capacidade Idade', 'Capital Endividamento', 'Serasa Score',
+                   'Carater Acoes', 'Carater Percentual Divida', 'Carater Restricoes', 'Serasa Protestos',
+                   'VTM Valor Total', 'Taxa de Juros', 'Total do Contrato (Bruto)', 'renda utilizada']
+    
+    for name in input_names:
+        inputs[name] = st.number_input(name, value=1.0 if 'Percentual' in name else 0, step=1.0)
+    
+    if st.button('Simular'):
+        df = pd.read_csv('df_model.csv')  # Carregue o dataset original aqui
+        (X_train, X_test, y_train, y_test), scaler = preprocess_data(df)
+        
+        model = None
+        model_type = ''
+        if model_choice == 'Tree Decision':
+            model = train_decision_tree(X_train, y_train)
+            model_type = 'tree'
+        elif model_choice == 'Rede Neural':
+            model = train_neural_network(X_train, y_train)
+            model_type = 'neural_network'
+        elif model_choice == 'CatBoost':
+            model = train_catboost(X_train, y_train)
+            model_type = 'catboost'
+        
+        report, conf_matrix, auc_score, fpr, tpr, y_proba = evaluate_model(model, X_test, y_test, scaler, model_type)
+        
+        st.write("### Relatório de Classificação")
+        st.json(report)
+        
+        plot_metrics(conf_matrix, auc_score, fpr, tpr)
+        
+        user_input_df = pd.DataFrame([inputs])
+        user_input_df['Nota da Clínica'] = user_input_df['Nota da Clínica'].apply(lambda x: 0 if x <= 3 else (1 if x <= 7 else 2))
+        user_input_df['Total do Contrato (Bruto)/renda utilizada'] = user_input_df['Total do Contrato (Bruto)'] / user_input_df['renda utilizada']
+        user_input_df.drop(columns=['Total do Contrato (Bruto)', 'renda utilizada'], inplace=True)
+        user_input_df = pd.DataFrame(scaler.transform(user_input_df), columns=user_input_df.columns)
+        
+        prob_default = model.predict_proba(user_input_df)[:, 1] if model_type != 'neural_network' else model.predict(user_input_df)[0]
+        
+        st.write(f"### Probabilidade de Inadimplência: {prob_default[0]*100:.2f}%")
+        color = 'green' if prob_default[0] < 0.5 else 'red'
+        st.markdown(f'<p style="color:{color}; font-size:24px">{prob_default[0]*100:.2f}%</p>', unsafe_allow_html=True)
