@@ -22,7 +22,7 @@ def transformar_nota(nota):
 
 # Função para carregar dados (substitua pelo seu dataset)
 def carregar_dados():
-    df = pd.read_csv("seu_dataset.csv")
+    df = pd.read_csv("df_model.csv")
     return df
 
 # Função para preprocessamento
