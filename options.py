@@ -76,7 +76,10 @@ def plot_metrics(conf_matrix, auc_score, fpr, tpr):
 
 def main():
     st.title('Simulação de Modelos de Crédito')
+    st.sidebar.write("A Parcela Mais busca aprimorar seu processo de concessão de crédito para financiamentos odontológicos, reduzindo riscos e melhorando a assertividade na análise de perfis de clientes. Para isso, utilizamos dados históricos de clientes, suas solicitações de crédito e o desempenho de pagamentos, visando desenvolver um modelo preditivo que avalie a probabilidade de inadimplência de novos solicitantes.")
     model_choice = st.sidebar.selectbox("Escolha o modelo", ['Tree Decision', 'Rede Neural', 'CatBoost'])
+    
+    st.image("parcelamais.jpg")
     
     inputs = {}
     input_names = ['Nota da Clínica', 'Capacidade Idade', 'Capital Endividamento', 'Serasa Score',
@@ -117,8 +120,8 @@ def main():
         user_input_df = pd.DataFrame([inputs])
         missing_cols = set(X_train.columns) - set(user_input_df.columns)
         for col in missing_cols:
-            user_input_df[col] = 0  # Adiciona colunas ausentes com valor 0
-        user_input_df = user_input_df[X_train.columns]  # Reorganiza as colunas
+            user_input_df[col] = 0
+        user_input_df = user_input_df[X_train.columns]
         user_input_df_scaled = pd.DataFrame(scaler.transform(user_input_df), columns=X_train.columns)
         
         prob_default = model.predict_proba(user_input_df_scaled)[:, 1] if model_type != 'neural_network' else model.predict(user_input_df_scaled)[0]
